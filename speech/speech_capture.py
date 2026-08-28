@@ -13,8 +13,8 @@ def capture_speech():
         print("🎤 Ready!")
         audio = recognizer.listen(
             source,
-            timeout=5,
-            phrase_time_limit=8
+            timeout=10,
+            phrase_time_limit=16
         )
 
     try:
