@@ -1,0 +1,45 @@
+{
+  "work": {
+    "name": "Work",
+    "description": "development and productivity environment",
+    "apps": [
+      { "name": "vscode", "role": "development" },
+      { "name": "chatgpt", "role": "assistance" },
+      { "name": "email", "role": "communication" }
+    ]
+  },
+  "study": {
+    "name": "Study",
+    "description": "focused study and research setup",
+    "apps": [
+      { "name": "vscode", "role": "note taking and coding" },
+      { "name": "chrome", "role": "research and tutorials" },
+      { "name": "chatgpt", "role": "learning assistance" }
+    ]
+  },
+  "entertainment": {
+    "name": "Entertainment",
+    "description": "streaming and media entertainment",
+    "apps": [
+      { "name": "hotstar", "role": "streaming and videos" }
+    ]
+  },
+  "meeting": {
+    "name": "Meeting",
+    "description": "collaboration and meeting tools",
+    "apps": [
+      { "name": "email", "role": "calendar and communication" },
+      { "name": "chrome", "role": "meeting links and notes" }
+    ]
+  },
+  "development": {
+    "name": "Development",
+    "description": "software engineering environment",
+    "apps": [
+      { "name": "vscode", "role": "coding and project files" },
+      { "name": "chrome", "role": "debugging and documentation" },
+      { "name": "github", "role": "version control" },
+      { "name": "terminal", "role": "command line tools" }
+    ]
+  }
+}

@@ -1,6 +1,20 @@
+# Environment & Secrets
 .env
 .env.*
 !.env.example
+
+# Virtual Environments
 venv/
+.venv/
+
+# Python Cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Temporary Test & Runtime Artifacts
+assets/screenshots/*.png
+!assets/screenshots/.gitkeep
+data/*.txt
+!data/.gitkeep

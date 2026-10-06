@@ -1,11 +1,12 @@
-
 import os
 import subprocess
 import sys
+import webbrowser
+from pathlib import Path
 
 
 # ============================================================
-# APPLICATION ALIASES
+# APPLICATION ALIASES (Preserved for compatibility & fallback)
 # ============================================================
 
 APP_ALIASES = {
@@ -23,6 +24,14 @@ APP_ALIASES = {
 
     "camera": "camera",
     "windows camera": "camera",
+
+    "vscode": "visual studio code",
+    "vs code": "visual studio code",
+    "code": "visual studio code",
+
+    "terminal": "terminal",
+    "powershell": "powershell",
+    "cmd": "command prompt",
 }
 
 
@@ -98,7 +107,6 @@ def find_chrome():
     user_profile = os.environ.get("USERPROFILE")
 
     if user_profile:
-
         possible_paths.append(
             os.path.join(
                 user_profile,
@@ -141,35 +149,22 @@ def find_chrome():
     )
 
     for path in possible_paths:
-
-        print(
-            f"Checking: {path}",
-            file=sys.stderr,
-            flush=True,
-        )
-
         try:
-
             exists = os.path.isfile(path)
-
         except Exception as e:
-
             print(
                 f"Path check error: {repr(e)}",
                 file=sys.stderr,
                 flush=True,
             )
-
             exists = False
 
         if exists:
-
             print(
                 f"CHROME FOUND: {path}",
                 file=sys.stderr,
                 flush=True,
             )
-
             return path
 
     # --------------------------------------------------------
@@ -192,104 +187,81 @@ def find_chrome():
 def open_application(application):
 
     if not application:
-
         print(
             "Application name is missing.",
             file=sys.stderr,
             flush=True,
         )
-
         return False
 
-    # --------------------------------------------------------
-    # Normalize
-    # --------------------------------------------------------
+    raw_application = str(application).strip()
+    application_norm = raw_application.lower()
 
-    application = str(application).lower().strip()
-
-    application = APP_ALIASES.get(
-        application,
-        application,
+    application_norm = APP_ALIASES.get(
+        application_norm,
+        application_norm,
     )
 
     print(
-        f"Normalized application: {application}",
+        f"Normalized application: {application_norm}",
         file=sys.stderr,
         flush=True,
     )
 
+    # Helper to track context and usage
+    def _record_success(app_key):
+        try:
+            from context.usage_manager import record_launch
+            from context.context_manager import context
+            record_launch(app_key)
+            context.set_current_app(app_key)
+        except Exception as ex:
+            print(f"[Tracker Warning]: {repr(ex)}", file=sys.stderr)
 
     # ========================================================
     # CHROME
     # ========================================================
 
-    if application == "chrome":
-
+    if application_norm == "chrome":
         chrome_path = find_chrome()
 
         if chrome_path is None:
-
             print(
                 "ERROR: Chrome executable was not found.",
                 file=sys.stderr,
                 flush=True,
             )
-
             return False
 
-        print(
-            f"Chrome executable: {chrome_path}",
-            file=sys.stderr,
-            flush=True,
-        )
-
-        print(
-            f"Chrome exists: {os.path.isfile(chrome_path)}",
-            file=sys.stderr,
-            flush=True,
-        )
-
         try:
-
-            # ------------------------------------------------
-            # Windows Shell launch
-            # ------------------------------------------------
-
             print(
                 "Launching Chrome...",
                 file=sys.stderr,
                 flush=True,
             )
-
             os.startfile(chrome_path)
-
             print(
                 "Chrome launch command completed.",
                 file=sys.stderr,
                 flush=True,
             )
-
+            _record_success("chrome")
             return True
 
         except Exception as e:
-
             print(
                 f"Chrome launch failed: {repr(e)}",
                 file=sys.stderr,
                 flush=True,
             )
-
             return False
-
 
     # ========================================================
     # NOTEPAD
     # ========================================================
 
-    elif application == "notepad":
-
+    elif application_norm == "notepad":
         try:
-
             subprocess.Popen(
                 ["notepad.exe"],
                 stdin=subprocess.DEVNULL,
@@ -297,34 +269,28 @@ def open_application(application):
                 stderr=subprocess.DEVNULL,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
             )
-
             print(
                 "Notepad launched.",
                 file=sys.stderr,
                 flush=True,
             )
-
+            _record_success("notepad")
             return True
 
         except Exception as e:
-
             print(
                 f"Notepad launch failed: {repr(e)}",
                 file=sys.stderr,
                 flush=True,
             )
-
             return False
-
 
     # ========================================================
     # CALCULATOR
     # ========================================================
 
-    elif application == "calculator":
-
+    elif application_norm == "calculator":
         try:
-
             subprocess.Popen(
                 ["calc.exe"],
                 stdin=subprocess.DEVNULL,
@@ -332,34 +298,28 @@ def open_application(application):
                 stderr=subprocess.DEVNULL,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
             )
-
             print(
                 "Calculator launched.",
                 file=sys.stderr,
                 flush=True,
             )
-
+            _record_success("calculator")
             return True
 
         except Exception as e:
-
             print(
                 f"Calculator launch failed: {repr(e)}",
                 file=sys.stderr,
                 flush=True,
             )
-
             return False
-
 
     # ========================================================
     # CAMERA
     # ========================================================
 
-    elif application == "camera":
-
+    elif application_norm == "camera":
         try:
-
             subprocess.Popen(
                 [
                     "cmd.exe",
@@ -373,39 +333,78 @@ def open_application(application):
                 stderr=subprocess.DEVNULL,
                 creationflags=subprocess.CREATE_NO_WINDOW,
             )
-
             print(
                 "Camera launch command sent.",
                 file=sys.stderr,
                 flush=True,
             )
-
+            _record_success("camera")
             return True
 
         except Exception as e:
-
             print(
                 f"Camera launch failed: {repr(e)}",
                 file=sys.stderr,
                 flush=True,
             )
-
             return False
 
-
     # ========================================================
-    # UNKNOWN APPLICATION
+    # DYNAMIC DISCOVERY FALLBACK
     # ========================================================
 
-    else:
+    try:
+        from automation.app_discovery import find_application
+        app_info = find_application(raw_application) or find_application(application_norm)
 
+        if app_info:
+            target_path = app_info.get("path")
+            app_type = app_info.get("type", "exe")
+            app_display_name = app_info.get("name", raw_application)
+
+            print(
+                f"Found discovered app '{app_display_name}': {target_path} (type: {app_type})",
+                file=sys.stderr,
+                flush=True,
+            )
+
+            # Web application
+            if app_type == "web":
+                webbrowser.open(target_path)
+                _record_success(app_display_name.lower())
+                return True
+
+            # UWP application
+            elif app_type == "uwp":
+                subprocess.Popen(
+                    ["cmd.exe", "/c", "start", "", target_path],
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+                _record_success(app_display_name.lower())
+                return True
+
+            # Executable / Shortcut
+            elif target_path:
+                os.startfile(target_path)
+                _record_success(app_display_name.lower())
+                return True
+
+    except Exception as e:
         print(
-            f"I don't know how to open: {application}",
+            f"Dynamic application launch failed: {repr(e)}",
             file=sys.stderr,
             flush=True,
         )
 
-        return False
+    print(
+        f"I don't know how to open: {application}",
+        file=sys.stderr,
+        flush=True,
+    )
+    return False
 
 
 # ============================================================
@@ -413,9 +412,7 @@ def open_application(application):
 # ============================================================
 
 def is_process_running(process_name):
-
     try:
-
         result = subprocess.run(
             [
                 "tasklist",
@@ -426,20 +423,17 @@ def is_process_running(process_name):
             text=True,
             creationflags=subprocess.CREATE_NO_WINDOW,
         )
-
         return (
             process_name.lower()
             in result.stdout.lower()
         )
 
     except Exception as e:
-
         print(
             f"Process check failed: {repr(e)}",
             file=sys.stderr,
             flush=True,
         )
-
         return False
 
 
@@ -450,63 +444,62 @@ def is_process_running(process_name):
 def close_application(application):
 
     if not application:
-
         print(
             "Application name is missing.",
             file=sys.stderr,
             flush=True,
         )
-
         return False
 
-    # --------------------------------------------------------
-    # Normalize
-    # --------------------------------------------------------
+    raw_application = str(application).strip()
+    application_norm = raw_application.lower()
 
-    application = str(application).lower().strip()
-
-    application = APP_ALIASES.get(
-        application,
-        application,
+    application_norm = APP_ALIASES.get(
+        application_norm,
+        application_norm,
     )
 
     print(
-        f"Normalized application: {application}",
+        f"Normalized application: {application_norm}",
         file=sys.stderr,
         flush=True,
     )
-
-
-    # --------------------------------------------------------
-    # Process names
-    # --------------------------------------------------------
 
     process_names = {
         "chrome": "chrome.exe",
         "notepad": "notepad.exe",
         "calculator": "CalculatorApp.exe",
         "camera": "WindowsCamera.exe",
+        "visual studio code": "Code.exe",
+        "vscode": "Code.exe",
+        "code": "Code.exe",
+        "terminal": "WindowsTerminal.exe",
+        "powershell": "powershell.exe",
+        "command prompt": "cmd.exe",
+        "paint": "mspaint.exe",
+        "task manager": "Taskmgr.exe",
     }
 
-    process = process_names.get(application)
+    process = process_names.get(application_norm)
+
+    if not process:
+        try:
+            from automation.app_discovery import find_application
+            info = find_application(raw_application) or find_application(application_norm)
+            if info and info.get("process"):
+                process = info.get("process")
+        except Exception:
+            pass
 
     if process is None:
-
         print(
             f"I don't know how to close: {application}",
             file=sys.stderr,
             flush=True,
         )
-
         return False
 
-
     try:
-
-        # ----------------------------------------------------
-        # Check process
-        # ----------------------------------------------------
-
         print(
             f"Checking process: {process}",
             file=sys.stderr,
@@ -514,18 +507,12 @@ def close_application(application):
         )
 
         if not is_process_running(process):
-
             print(
                 f"{application} is not currently running.",
                 file=sys.stderr,
                 flush=True,
             )
-
             return False
-
-        # ----------------------------------------------------
-        # Kill process
-        # ----------------------------------------------------
 
         print(
             f"Closing {application}...",
@@ -547,7 +534,6 @@ def close_application(application):
         )
 
         if result.stdout:
-
             print(
                 result.stdout.strip(),
                 file=sys.stderr,
@@ -555,7 +541,6 @@ def close_application(application):
             )
 
         if result.stderr:
-
             print(
                 result.stderr.strip(),
                 file=sys.stderr,
@@ -563,13 +548,11 @@ def close_application(application):
             )
 
         if result.returncode == 0:
-
             print(
                 f"{application} closed successfully.",
                 file=sys.stderr,
                 flush=True,
             )
-
             return True
 
         print(
@@ -578,15 +561,12 @@ def close_application(application):
             file=sys.stderr,
             flush=True,
         )
-
         return False
 
     except Exception as e:
-
         print(
             f"Close operation failed: {repr(e)}",
             file=sys.stderr,
             flush=True,
         )
-
         return False

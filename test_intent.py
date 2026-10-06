@@ -1,58 +1,48 @@
-import json
+"""
+IntelliDesk Voice & Intent Pipeline Test Script.
+
+Listens to microphone input, performs Speech-to-Text, classifies intent with Groq LLM,
+routes to MCP or Direct Q&A, updates context, and speaks response.
+"""
 
 from speech.speech_capture import capture_speech
-from llm.grok_client import ask_grok
+from llm.ai_router import classify_intent
 from intent_router import handle_intent
+from context.context_manager import context
 
 
-print("🎤 IntelliDesk is listening...")
+def run_voice_cycle():
+    print("=" * 60)
+    print("🎤 IntelliDesk is listening... (Speak a command or question)")
+    print("=" * 60)
 
-text = capture_speech()
+    # 1. Speech Capture
+    text = capture_speech()
 
-if text:
-    print("\n🤖 Sending command to Groq...")
+    if not text:
+        print("❌ No speech detected.")
+        return
 
-    response = ask_grok(f"""
-You are the intention detection module of IntelliDesk.
+    print(f"\n📝 Transcribed Spoken Text: \"{text}\"")
 
-Analyze the user's command and return ONLY valid JSON.
+    # 2. Pronoun and Reference Resolution from Context
+    resolved_text = context.resolve_reference(text)
+    if resolved_text != text:
+        print(f"🔄 Context Resolved: \"{resolved_text}\"")
 
-Return exactly this format:
+    # 3. Intent Classification with Groq LLM
+    print("\n🤖 Analyzing command with Groq LLM...")
+    session_summary = context.get_context_summary()
+    intent_data = classify_intent(resolved_text, session_context=session_summary)
 
-{{
-    "intent": "open_application | close_application | unknown",
-    "application": "application name or null"
-}}
+    print("\n🎯 Detected Intent Data:")
+    print(intent_data)
 
-Rules:
-- Return ONLY JSON.
-- Do NOT use markdown.
-- Never guess an application name.
-- If the user says only "open", set application to null.
-- If the user says only "close", set application to null.
+    # 4. Route and Execute
+    print("\n⚡ Executing Intent...")
+    result = handle_intent(intent_data, user_command=resolved_text, speak_response=True)
+    print("\n✨ Turn Complete. Result:", result.get("success"))
 
-User command:
-{text}
-""")
 
-    print("\n🎯 Groq Response:")
-    print(response)
-
-    try:
-        # Clean accidental markdown if Groq returns it
-        response = response.strip().replace("```json", "").replace("```", "")
-
-        intent_data = json.loads(response)
-
-        print("\n✅ Intent detected")
-        print("Intent:", intent_data["intent"])
-        print("Application:", intent_data["application"])
-
-        # Execute through MCP
-        handle_intent(intent_data)
-
-    except json.JSONDecodeError:
-        print("\n❌ Invalid JSON returned by Groq.")
-        print(response)
-else:
-    print("No speech detected.")
+if __name__ == "__main__":
+    run_voice_cycle()

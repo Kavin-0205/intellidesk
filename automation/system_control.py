@@ -438,3 +438,75 @@ def decrease_brightness(amount=10):
         )
 
         return False
+
+
+# ============================================================
+# SYSTEM POWER MANAGEMENT
+# ============================================================
+
+def lock_screen() -> dict:
+    """Lock the Windows desktop session immediately."""
+    import ctypes
+    try:
+        ctypes.windll.user32.LockWorkStation()
+        return {"success": True, "action": "lock_screen"}
+    except Exception as e:
+        return {"success": False, "action": "lock_screen", "error": str(e)}
+
+
+def sleep_system() -> dict:
+    """Put the computer into sleep / suspend mode."""
+    import subprocess
+    try:
+        subprocess.run(["rundll32.exe", "powrprof.dll,SetSuspendState", "0,1,0"], check=True)
+        return {"success": True, "action": "sleep_system"}
+    except Exception as e:
+        return {"success": False, "action": "sleep_system", "error": str(e)}
+
+
+def shutdown_system(delay_seconds: int = 60) -> dict:
+    """
+    Schedule a Windows shutdown with safety countdown.
+    delay_seconds defaults to 60s to allow cancellation.
+    """
+    import subprocess
+    try:
+        delay = max(10, int(delay_seconds))
+        subprocess.run(["shutdown", "/s", "/t", str(delay)], check=True)
+        return {
+            "success": True,
+            "action": "shutdown_system",
+            "delay_seconds": delay,
+            "cancel_command": "shutdown /a",
+        }
+    except Exception as e:
+        return {"success": False, "action": "shutdown_system", "error": str(e)}
+
+
+def restart_system(delay_seconds: int = 60) -> dict:
+    """
+    Schedule a Windows restart with safety countdown.
+    delay_seconds defaults to 60s to allow cancellation.
+    """
+    import subprocess
+    try:
+        delay = max(10, int(delay_seconds))
+        subprocess.run(["shutdown", "/r", "/t", str(delay)], check=True)
+        return {
+            "success": True,
+            "action": "restart_system",
+            "delay_seconds": delay,
+            "cancel_command": "shutdown /a",
+        }
+    except Exception as e:
+        return {"success": False, "action": "restart_system", "error": str(e)}
+
+
+def cancel_shutdown() -> dict:
+    """Cancel a scheduled shutdown or restart."""
+    import subprocess
+    try:
+        subprocess.run(["shutdown", "/a"], check=True)
+        return {"success": True, "action": "cancel_shutdown"}
+    except Exception as e:
+        return {"success": False, "action": "cancel_shutdown", "error": str(e)}

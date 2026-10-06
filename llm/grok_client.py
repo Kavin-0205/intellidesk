@@ -12,7 +12,9 @@ if not api_key:
 
 client = OpenAI(
     api_key=api_key,
-    base_url="https://api.groq.com/openai/v1"
+    base_url="https://api.groq.com/openai/v1",
+    timeout=25.0,
+    max_retries=2,
 )
 
 

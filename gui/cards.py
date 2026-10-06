@@ -1,37 +1,67 @@
-from PySide6.QtWidgets import (
-    QFrame,
-    QLabel,
-    QVBoxLayout
-)
+"""
+IntelliDesk Dashboard Cards — premium dark theme.
+"""
+
+from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QHBoxLayout, QProgressBar
 from PySide6.QtCore import Qt
 
 
 class DashboardCard(QFrame):
     """
-    Reusable dashboard card.
-    Example:
-        CPU Usage
-        25%
+    Premium metric card with icon + title + big value + optional progress bar.
     """
 
-    def __init__(self, title: str, value: str):
+    def __init__(self, icon: str, title: str, value: str = "—",
+                 subtitle: str = "", show_bar: bool = False):
         super().__init__()
-
-        self.setObjectName("dashboardCard")
+        self.setObjectName("dashCard")
+        self.setMinimumHeight(110)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(18, 16, 18, 14)
+        layout.setSpacing(4)
 
-        self.title_label = QLabel(title)
-        self.title_label.setAlignment(Qt.AlignCenter)
-        self.title_label.setObjectName("cardTitle")
+        # Icon + title row
+        top = QHBoxLayout()
+        icon_lbl = QLabel(icon)
+        icon_lbl.setObjectName("cardIcon")
 
-        self.value_label = QLabel(value)
-        self.value_label.setAlignment(Qt.AlignCenter)
-        self.value_label.setObjectName("cardValue")
+        title_lbl = QLabel(title)
+        title_lbl.setObjectName("cardTitle")
 
-        layout.addWidget(self.title_label)
-        layout.addWidget(self.value_label)
+        top.addWidget(icon_lbl)
+        top.addSpacing(6)
+        top.addWidget(title_lbl)
+        top.addStretch()
+        layout.addLayout(top)
 
-    def update_value(self, value: str):
-        """Update the displayed value."""
-        self.value_label.setText(value)
+        # Big value
+        self.value_lbl = QLabel(value)
+        self.value_lbl.setObjectName("cardValue")
+        layout.addWidget(self.value_lbl)
+
+        # Optional progress bar
+        if show_bar:
+            self.bar = QProgressBar()
+            self.bar.setRange(0, 100)
+            self.bar.setValue(0)
+            self.bar.setTextVisible(False)
+            self.bar.setFixedHeight(6)
+            layout.addWidget(self.bar)
+        else:
+            self.bar = None
+
+        # Subtitle
+        if subtitle:
+            self.sub_lbl = QLabel(subtitle)
+            self.sub_lbl.setObjectName("cardSub")
+            layout.addWidget(self.sub_lbl)
+        else:
+            self.sub_lbl = None
+
+    def update_value(self, value: str, bar_pct: int = -1, subtitle: str = ""):
+        self.value_lbl.setText(value)
+        if self.bar is not None and bar_pct >= 0:
+            self.bar.setValue(min(100, max(0, bar_pct)))
+        if self.sub_lbl and subtitle:
+            self.sub_lbl.setText(subtitle)

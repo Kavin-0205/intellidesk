@@ -1,0 +1,23 @@
+{
+  "vscode": {
+    "name": "vscode",
+    "count": 2,
+    "first_used": "2026-08-28T15:35:20.840383",
+    "last_used": "2026-08-28T15:35:20.857833",
+    "category": "general"
+  },
+  "chrome": {
+    "name": "chrome",
+    "count": 1,
+    "first_used": "2026-08-28T15:35:20.881309",
+    "last_used": "2026-08-28T15:35:20.881309",
+    "category": "general"
+  },
+  "vs code": {
+    "name": "VS Code",
+    "count": 6,
+    "first_used": "2026-08-28T16:16:06.584400",
+    "last_used": "2026-09-21T10:50:27.653495",
+    "category": "general"
+  }
+}
