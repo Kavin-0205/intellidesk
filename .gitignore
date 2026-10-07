@@ -17,4 +17,8 @@ __pycache__/
 assets/screenshots/*.png
 !assets/screenshots/.gitkeep
 data/*.txt
-!data/.gitkeep
+!data/.gitkeep
+
+# Evaluation Temporary Sandbox
+evaluation_workspace/
+

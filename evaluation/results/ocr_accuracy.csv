@@ -1,0 +1,5 @@
+target_id,ground_truth,detected_text,char_accuracy_pct,word_accuracy_pct,detected_full,ocr_latency_ms
+ocr_target_1,IntelliDesk OCR Test 12345,IntelliDesk OCR Test 12345,100.0,100.0,True,12259.77
+ocr_target_2,IEEE Conference Benchmark 2026,Benchmark 2028,3.7,25.0,False,1022.6
+ocr_target_3,Session Context Multi-Modal Automation,Session Context Multi-Modal Automation,100.0,100.0,True,937.67
+ocr_target_4,Error: Process terminated with status code 0x80004005,Process terminatedwIth statuscode 0x80004005,13.04,28.57,True,1151.31

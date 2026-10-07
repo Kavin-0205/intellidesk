@@ -1,0 +1,44 @@
+============================================================
+INTELLIDESK EXPERIMENTAL EVALUATION ENVIRONMENT
+============================================================
+
+--- SYSTEM & HARDWARE ---
+Operating System:    Windows-11-10.0.26200-SP0 (CoreSingleLanguage)
+OS Release/Version:  11 / 10.0.26200
+Architecture:        64bit
+CPU Processor:       Intel64 Family 6 Model 154 Stepping 3, GenuineIntel
+Physical Cores:      12
+Logical Cores:       16
+Total RAM:           15.63 GB (16781504512 bytes)
+GPU Device:          None (CPU Execution)
+CUDA Available:      False
+CUDA Version:        N/A
+
+--- RUNTIME & COMPILERS ---
+Python Version:      3.13.7
+Python Executable:   C:\Users\asusk\OneDrive\Desktop\finalproject\venv\Scripts\python.exe
+Python Compiler:     MSC v.1944 64 bit (AMD64)
+Configured LLM Model:openai/gpt-oss-120b
+EasyOCR Model Cached:True
+
+--- DEPENDENCIES & LIBRARIES ---
+PySide6                 : 6.11.1
+easyocr                 : 1.7.2
+git                     : 3.1.60
+matplotlib              : 3.11.2
+mcp                     : installed
+numpy                   : 2.5.1
+openai                  : 2.45.0
+psutil                  : 7.2.2
+pyautogui               : 0.9.54
+pycaw                   : installed
+pygetwindow             : 0.0.9
+pymongo                 : 4.17.0
+pyperclip               : 1.11.0
+scipy                   : 1.18.0
+screen_brightness_control: 0.27.2
+speech_recognition      : 3.17.0
+
+============================================================
+Generated automatically by collect_environment.py
+============================================================
