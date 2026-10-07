@@ -218,10 +218,14 @@ def git_checkout(branch_name: str, repo_path: Optional[str] = None) -> dict:
 
 
 def git_create_branch(branch_name: str, repo_path: Optional[str] = None) -> dict:
-    """Create and switch to a new branch."""
+    """Create and switch to a new branch, or checkout if it already exists."""
     try:
         repo = _find_repo(repo_path)
-        repo.git.checkout("-b", branch_name)
+        existing_branches = [b.name for b in repo.branches]
+        if branch_name in existing_branches:
+            repo.git.checkout(branch_name)
+        else:
+            repo.git.checkout("-b", branch_name)
         return {
             "success": True,
             "action": "git_create_branch",

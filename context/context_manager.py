@@ -100,12 +100,26 @@ class ContextManager:
     def resolve_reference(self, text: str) -> str:
         """
         Resolve pronoun references such as "it", "that", "this" based on context.
-        Considers both active application and last Q&A topic.
+        Considers active application, last window, and last Q&A topic.
         """
         if not text:
             return text
 
         lower = text.lower().strip()
+        app_target = self.current_application or (self.recently_opened_apps[0] if self.recently_opened_apps else None)
+
+        # Handle specific common desktop follow-ups
+        if app_target:
+            if lower in ("shut it down", "turn it off"):
+                return f"close {app_target}"
+            if lower in ("close it", "exit it", "quit it", "kill it"):
+                return f"close {app_target}"
+            if lower in ("minimize it", "minimize that", "minimize that window", "minimize this"):
+                return f"minimize {app_target}"
+            if lower in ("maximize it", "maximize that", "maximize that window", "maximize this"):
+                return f"maximize {app_target}"
+            if lower in ("focus it", "bring it to front", "bring it forward", "switch to it"):
+                return f"focus {app_target}"
 
         # Pronouns that may refer to the last discussed topic or app
         pronouns = [" it", " that", " this"]
@@ -115,11 +129,11 @@ class ContextManager:
                 if self.last_question and any(w in lower for w in ["explain", "what", "who", "how", "why", "tell"]):
                     target = self.last_question
                 else:
-                    target = self.current_application or self.current_project or "the active application"
+                    target = app_target or self.current_project or "the active application"
                 resolved = text
                 for pronoun_word in ["it", "that", "this"]:
                     words = resolved.split()
-                    new_words = [target if w.lower() == pronoun_word else w for w in words]
+                    new_words = [target if w.lower().strip(",.?!") == pronoun_word else w for w in words]
                     resolved = " ".join(new_words)
                 return resolved
 

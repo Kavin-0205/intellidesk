@@ -432,16 +432,29 @@ class EvaluationHarness:
                     if action == "create_file":
                         file_ctl.create_file(str(p), content="Benchmark test content")
                         task_success = p.exists()
+                    elif action == "create_folder":
+                        file_ctl.create_folder(str(p))
+                        task_success = p.exists() and p.is_dir()
                     elif action == "read_file":
                         p.write_text("Benchmark test content", encoding="utf-8")
                         res = file_ctl.read_text_file(str(p))
                         task_success = res.get("success", False)
                     elif action == "rename_file":
-                        p.write_text("To be renamed", encoding="utf-8")
+                        if "folder" in task.task_id:
+                            p.mkdir(parents=True, exist_ok=True)
+                        else:
+                            p.write_text("To be renamed", encoding="utf-8")
+                        if p_new.exists():
+                            if p_new.is_file():
+                                p_new.unlink()
+                            elif p_new.is_dir():
+                                shutil.rmtree(p_new)
                         res = file_ctl.rename_file(str(p), str(p_new))
                         task_success = p_new.exists() and not p.exists()
                     elif action == "copy_file":
                         p.write_text("To be copied", encoding="utf-8")
+                        if p_new.exists():
+                            p_new.unlink()
                         res = file_ctl.copy_file(str(p), str(p_new))
                         task_success = p.exists() and p_new.exists()
                     elif action == "delete_file":
@@ -527,7 +540,7 @@ class EvaluationHarness:
                 elif task.category == "Input Control":
                     t0_exec = time.perf_counter()
                     action_type = predicted_data.get("action")
-                    if action_type == "set":
+                    if action_type in ("set", "copy"):
                         import pyperclip
                         txt = predicted_data.get("text", "IntelliDesk Benchmark")
                         pyperclip.copy(txt)

@@ -333,7 +333,17 @@ def rename_file(old_path: str, new_name_or_path: str) -> dict:
         if not dst.is_absolute():
             dst = src.parent / new_name_or_path
 
-        src.rename(dst)
+        if dst.exists():
+            if dst.is_file():
+                dst.unlink()
+            elif dst.is_dir():
+                shutil.rmtree(dst)
+
+        if src.is_file():
+            src.replace(dst)
+        else:
+            shutil.move(str(src), str(dst))
+
         return {
             "success": True,
             "action": "rename_file",

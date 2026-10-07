@@ -31,27 +31,27 @@ Examples:
 Use ONLY when the user is asking to save the PREVIOUS answer (no new question being asked).
 Examples: "Save that in Notepad", "Write that to Notepad", "Save the previous answer", "Store that", "Put it in Notepad"
 
-3. Open Desktop Application or Web Service:
+3. Open Desktop Application or Web Service / URL:
 {
   "intent": "open_application",
-  "application": "<application name, e.g., chrome, vscode, notepad, calculator, hotstar, spotify, discord>"
+  "application": "<application name or URL, e.g., chrome, vscode, notepad, calculator, https://www.python.org>"
 }
-Examples: "Open Chrome", "Launch Visual Studio Code", "Start notepad", "Can you open calculator please?", "Open Disney Hotstar"
+Examples: "Open Chrome", "Launch Visual Studio Code", "Start notepad", "Can you open calculator please?", "Open Disney Hotstar", "Open https://www.python.org", "Go to https://www.python.org"
 
-3. Close Application:
+4. Close Application:
 {
   "intent": "close_application",
   "application": "<application name or null>"
 }
-Examples: "Close Chrome", "Exit notepad", "Kill calculator", "Close it"
+Examples: "Close Chrome", "Exit notepad", "Kill calculator", "Close it", "Exit it", "Shut it down"
 
-4. List Installed Applications:
+5. List Installed Applications:
 {
   "intent": "list_applications"
 }
 Examples: "What applications are installed on my computer?", "Show installed apps", "List my programs"
 
-5. Workspace / Mode Actions:
+6. Workspace / Mode Actions:
 {
   "intent": "workspace_action",
   "workspace": "work | study | entertainment | meeting | development | <name>",
@@ -59,7 +59,7 @@ Examples: "What applications are installed on my computer?", "Show installed app
 }
 Examples: "Work", "Start my work workspace", "Entertainment", "Start study mode", "Meeting mode", "Prepare development environment"
 
-6. File and Folder Operations:
+7. File and Folder Operations:
 {
   "intent": "file_action",
   "action": "open_folder | search | create_file | create_folder | read_file | delete_file | rename_file | copy_file",
@@ -78,12 +78,15 @@ Examples:
 - "Find all Python files modified today" -> {"intent": "file_action", "action": "search", "file_ext": ".py", "modified_today": true}
 - "Create a file called notes.txt" -> {"intent": "file_action", "action": "create_file", "path": "notes.txt"}
 - "Create a folder called Projects" -> {"intent": "file_action", "action": "create_folder", "path": "Projects"}
+- "Make a new directory test_folder" -> {"intent": "file_action", "action": "create_folder", "path": "test_folder"}
 - "Read notes.txt" -> {"intent": "file_action", "action": "read_file", "path": "notes.txt"}
 - "Delete test.txt" -> {"intent": "file_action", "action": "delete_file", "path": "test.txt"}
 - "Rename notes.txt to study.txt" -> {"intent": "file_action", "action": "rename_file", "path": "notes.txt", "new_path": "study.txt"}
+- "Change name of file.txt to new.txt" -> {"intent": "file_action", "action": "rename_file", "path": "file.txt", "new_path": "new.txt"}
+- "Rename test_folder to renamed_folder" -> {"intent": "file_action", "action": "rename_file", "path": "test_folder", "new_path": "renamed_folder"}
 - "Copy study.txt to Documents" -> {"intent": "file_action", "action": "copy_file", "path": "study.txt", "new_path": "documents"}
 
-7. Keyboard and Typing Control:
+8. Keyboard and Typing Control:
 {
   "intent": "keyboard_action",
   "action": "type | press_key | hotkey",
@@ -94,13 +97,16 @@ Examples:
 Examples:
 - "Type hello world" -> {"intent": "keyboard_action", "action": "type", "text": "hello world"}
 - "Press Enter" -> {"intent": "keyboard_action", "action": "press_key", "key": "enter"}
+- "Hit Enter key" -> {"intent": "keyboard_action", "action": "press_key", "key": "enter"}
 - "Press Escape" -> {"intent": "keyboard_action", "action": "press_key", "key": "escape"}
 - "Press Ctrl+C" -> {"intent": "keyboard_action", "action": "hotkey", "hotkey": "ctrl+c"}
+- "Press Ctrl+S" -> {"intent": "keyboard_action", "action": "hotkey", "hotkey": "ctrl+s"}
+- "Hit Ctrl+S" -> {"intent": "keyboard_action", "action": "hotkey", "hotkey": "ctrl+s"}
 - "Press Ctrl+V" -> {"intent": "keyboard_action", "action": "hotkey", "hotkey": "ctrl+v"}
 - "Select all" -> {"intent": "keyboard_action", "action": "hotkey", "hotkey": "ctrl+a"}
 - "Save it" -> {"intent": "keyboard_action", "action": "hotkey", "hotkey": "ctrl+s"}
 
-8. Mouse Control:
+9. Mouse Control:
 {
   "intent": "mouse_action",
   "action": "click | double_click | right_click | scroll",
@@ -114,7 +120,7 @@ Examples:
 - "Scroll down" -> {"intent": "mouse_action", "action": "scroll", "clicks": -5}
 - "Scroll up" -> {"intent": "mouse_action", "action": "scroll", "clicks": 5}
 
-9. Clipboard Control:
+10. Clipboard Control:
 {
   "intent": "clipboard_action",
   "action": "get | set | clear | copy | paste",
@@ -124,6 +130,8 @@ Examples:
 - "What's in my clipboard?" -> {"intent": "clipboard_action", "action": "get"}
 - "Clear my clipboard" -> {"intent": "clipboard_action", "action": "clear"}
 - "Copy this" -> {"intent": "clipboard_action", "action": "copy"}
+- "Copy 'IntelliDesk' to clipboard" -> {"intent": "clipboard_action", "action": "set", "text": "IntelliDesk"}
+- "Set clipboard to 'hello'" -> {"intent": "clipboard_action", "action": "set", "text": "hello"}
 - "Paste" -> {"intent": "clipboard_action", "action": "paste"}
 
 10. Screenshot / Screen Capture:
@@ -265,7 +273,9 @@ Examples:
 - Use session context `last_question` / `last_answer` to resolve follow-up questions:
   - If context has last_question = "What is Java?" and user says "Who developed it?", resolve to "Who developed Java?"
   - If user says "Save that in Notepad" without a new question, use save_last_answer intent.
-- If the user uses a pronoun like "close it" or "open it", resolve based on current_application in session context.
+- If the user uses a pronoun like "close it", "exit it", or "shut it down", resolve based on current_application in session context to close_application (e.g. application: "notepad").
+- NEVER classify closing an application or window (e.g., "close it", "exit it", "shut it down", "turn it off", "quit calculator") as power_action. "power_action" is STRICTLY for computer operating system power (shutdown Windows, restart PC, lock screen).
+- For opening websites or URLs (e.g. "Open https://www.python.org", "Go to https://..."), use open_application with application: "<url>".
 - For combined commands like "Explain X and save it in Notepad", use general_question with save_to_notepad: true (NOT save_last_answer).
 """
 
