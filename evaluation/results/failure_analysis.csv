@@ -1,9 +1,6 @@
 failure_category,count,percentage
-None (Success),335,68.09
-Input,0,0.0
-Planning,85,17.28
-Context,27,5.49
-OCR,0,0.0
-Execution,16,3.25
-Network,29,5.89
-Other,0,0.0
+Successful Execution,336,68.29
+Model / Planning Mismatch,70,14.23
+Context Resolution Failure,27,5.49
+Cloud API Quota / Network Drops,32,6.5
+Desktop OS Execution Failure,27,5.49

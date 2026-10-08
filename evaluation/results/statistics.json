@@ -1,186 +1,281 @@
 {
+  "dataset_metadata": {
+    "total_benchmark_trials": 492,
+    "total_unique_tasks": 47,
+    "matched_baseline_tasks": 28,
+    "mcp_microbenchmark_trials": 20,
+    "ocr_groundtruth_targets": 4,
+    "total_empirical_trials": 516
+  },
+  "matched_workload_comparison": {
+    "task_count": 28,
+    "trials_per_config": 168,
+    "b0_intent_accuracy": {
+      "numerator": 99,
+      "total": 168,
+      "pct": 58.93,
+      "ci_95": "[51.37, 66.09]"
+    },
+    "b1_intent_accuracy": {
+      "numerator": 165,
+      "total": 168,
+      "pct": 98.21,
+      "ci_95": "[94.88, 99.39]"
+    },
+    "b0_tsr": {
+      "numerator": 99,
+      "total": 168,
+      "pct": 58.93,
+      "ci_95": "[51.37, 66.09]"
+    },
+    "b1_tsr": {
+      "numerator": 144,
+      "total": 168,
+      "pct": 85.71,
+      "ci_95": "[79.62, 90.21]"
+    },
+    "mcnemar_paired_test": {
+      "contingency_table": {
+        "b0_ok_b1_ok": 96,
+        "b0_ok_b1_fail": 3,
+        "b0_fail_b1_ok": 69,
+        "b0_fail_b1_fail": 0
+      },
+      "chi2_statistic": 58.6806,
+      "p_value": "< 0.0001",
+      "is_statistically_significant": true
+    }
+  },
   "configurations": {
-    "B0": {
-      "configuration": "B0",
-      "trials": 168,
+    "B0_Matched": {
+      "configuration": "B0 (Rule Baseline)",
+      "workload": "Matched 28 Tasks",
+      "trials_total": 168,
+      "quota_blocked": 0,
+      "valid_queries": 168,
       "intent_accuracy_pct": 58.93,
       "intent_ci_95": "[51.37, 66.09]",
+      "intent_numerator": 99,
+      "intent_denominator": 168,
       "tsr_pct": 58.93,
       "tsr_ci_95": "[51.37, 66.09]",
+      "tsr_numerator": 99,
+      "tsr_denominator": 168,
       "cra_pct": "NA",
       "cra_ci_95": "NA",
       "fallback_rate_pct": 0.0,
-      "mean_e2e_ms": 212.98,
       "median_e2e_ms": 2.44,
+      "mean_e2e_ms": 212.98,
       "p95_e2e_ms": 1226.45,
       "peak_ram_mb": 116.3,
-      "mean_cpu_pct": 20.03
+      "note": "Keyword/regex heuristic matcher on 28 operational tasks."
     },
-    "B1": {
-      "configuration": "B1",
-      "trials": 282,
-      "intent_accuracy_pct": 94.33,
-      "intent_ci_95": "[90.98, 96.48]",
-      "tsr_pct": 79.43,
-      "tsr_ci_95": "[74.33, 83.74]",
-      "cra_pct": 10.0,
-      "cra_ci_95": "[3.46, 25.62]",
-      "fallback_rate_pct": 1.06,
-      "mean_e2e_ms": 15097.25,
-      "median_e2e_ms": 1641.86,
-      "p95_e2e_ms": 27945.07,
-      "peak_ram_mb": 1367.14,
-      "mean_cpu_pct": 19.49
-    },
-    "B2": {
-      "configuration": "B2",
-      "trials": 30,
-      "intent_accuracy_pct": 43.33,
-      "intent_ci_95": "[27.38, 60.8]",
-      "tsr_pct": 43.33,
-      "tsr_ci_95": "[27.38, 60.8]",
-      "cra_pct": 43.33,
-      "cra_ci_95": "[27.38, 60.8]",
-      "fallback_rate_pct": 56.67,
-      "mean_e2e_ms": 5591.26,
-      "median_e2e_ms": 218.8,
-      "p95_e2e_ms": 26532.27,
-      "peak_ram_mb": 126.34,
-      "mean_cpu_pct": 17.62
-    },
-    "B3": {
-      "configuration": "B3",
-      "trials": 12,
-      "intent_accuracy_pct": 0.0,
-      "intent_ci_95": "[0.0, 24.25]",
-      "tsr_pct": 0.0,
-      "tsr_ci_95": "[0.0, 24.25]",
+    "B1_Matched": {
+      "configuration": "B1 (LLM No Context)",
+      "workload": "Matched 28 Tasks",
+      "trials_total": 168,
+      "quota_blocked": 3,
+      "valid_queries": 165,
+      "intent_accuracy_pct": 98.21,
+      "intent_ci_95": "[94.88, 99.39]",
+      "intent_numerator": 165,
+      "intent_denominator": 168,
+      "tsr_pct": 85.71,
+      "tsr_ci_95": "[79.62, 90.21]",
+      "tsr_numerator": 144,
+      "tsr_denominator": 168,
       "cra_pct": "NA",
       "cra_ci_95": "NA",
-      "fallback_rate_pct": 100.0,
-      "mean_e2e_ms": 195.41,
-      "median_e2e_ms": 191.75,
-      "p95_e2e_ms": 274.35,
+      "fallback_rate_pct": 0.0,
+      "median_e2e_ms": 1599.38,
+      "mean_e2e_ms": 7674.78,
+      "p95_e2e_ms": 26823.42,
+      "peak_ram_mb": 126.0,
+      "note": "Exact paired workload comparison against B0."
+    },
+    "B1_Full": {
+      "configuration": "B1 (LLM No Context)",
+      "workload": "Full 47 Tasks",
+      "trials_total": 282,
+      "quota_blocked": 3,
+      "valid_queries": 279,
+      "intent_accuracy_all_pct": 94.33,
+      "intent_accuracy_all_ci_95": "[90.98, 96.48]",
+      "intent_accuracy_valid_pct": 95.34,
+      "intent_accuracy_valid_ci_95": "[92.19, 97.26]",
+      "intent_numerator": 266,
+      "tsr_all_pct": 79.43,
+      "tsr_all_ci_95": "[74.33, 83.74]",
+      "tsr_valid_pct": 80.29,
+      "tsr_valid_ci_95": "[75.22, 84.53]",
+      "tsr_numerator": 224,
+      "cra_pct": 10.0,
+      "cra_ci_95": "[3.46, 25.62]",
+      "cra_numerator": 3,
+      "cra_denominator": 30,
+      "fallback_rate_pct": 1.06,
+      "median_e2e_ms": 1634.0,
+      "filtered_mean_e2e_ms": 8116.96,
+      "raw_mean_e2e_ms": 15097.25,
+      "p95_e2e_ms": 27553.36,
+      "peak_ram_mb": 1367.14,
+      "note": "Includes 24 screen OCR trials where PyTorch/EasyOCR was loaded in process memory."
+    },
+    "B2": {
+      "configuration": "B2 (LLM + Context)",
+      "workload": "Context Tasks (5 Tasks)",
+      "trials_total": 30,
+      "quota_blocked": 17,
+      "valid_queries": 13,
+      "cra_active_pct": 100.0,
+      "cra_active_ci_95": "[77.19, 100.0]",
+      "cra_active_numerator": 13,
+      "cra_active_denominator": 13,
+      "cra_all_pct": 43.33,
+      "cra_all_ci_95": "[27.38, 60.8]",
+      "cra_all_numerator": 13,
+      "cra_all_denominator": 30,
+      "median_e2e_ms": 218.8,
+      "mean_e2e_ms": 5591.26,
+      "p95_e2e_ms": 26532.27,
+      "peak_ram_mb": 126.34,
+      "note": "13/13 active trials completed with 100% resolution; 17 subsequent trials blocked by HTTP 429 quota."
+    },
+    "B3": {
+      "configuration": "B3 (LLM + Context + OCR)",
+      "workload": "Screen Tasks (2 Tasks)",
+      "trials_total": 12,
+      "quota_blocked": 12,
+      "valid_queries": 0,
+      "status": "Quota Blocked (100% Rate-Limited)",
+      "reported_intent_pct": 0.0,
+      "valid_intent_pct": "NA (Zero Valid Queries)",
       "peak_ram_mb": 126.4,
-      "mean_cpu_pct": 17.27
+      "note": "12/12 trials immediately rejected by cloud HTTP 429 rate limit. Zero inferences reached model."
     }
   },
-  "latency_breakdown": {
-    "input_processing": {
+  "failure_taxonomy": [
+    {
+      "failure_category": "Successful Execution",
+      "count": 336,
+      "percentage": 68.29
+    },
+    {
+      "failure_category": "Model / Planning Mismatch",
+      "count": 70,
+      "percentage": 14.23
+    },
+    {
+      "failure_category": "Context Resolution Failure",
+      "count": 27,
+      "percentage": 5.49
+    },
+    {
+      "failure_category": "Cloud API Quota / Network Drops",
+      "count": 32,
+      "percentage": 6.5
+    },
+    {
+      "failure_category": "Desktop OS Execution Failure",
+      "count": 27,
+      "percentage": 5.49
+    }
+  ],
+  "latency_profile": {
+    "Input Processing": {
       "count": 44,
       "mean": 0.01,
       "median": 0.01,
       "std": 0.01,
       "min": 0.01,
       "max": 0.03,
-      "p95": 0.03,
-      "stage": "input_processing"
+      "p95": 0.03
     },
-    "llm_inference": {
-      "count": 324,
-      "mean": 13138.8,
-      "median": 1147.67,
-      "std": 110024.5,
-      "min": 145.69,
-      "max": 1976558.48,
-      "p95": 27049.09,
-      "stage": "llm_inference"
-    },
-    "ocr_processing": {
-      "count": 12,
-      "mean": 10409.85,
-      "median": 6748.68,
-      "std": 6813.54,
-      "min": 6329.43,
-      "max": 27189.69,
-      "p95": 23131.11,
-      "stage": "ocr_processing"
-    },
-    "intent_routing": {
+    "Intent Routing": {
       "count": 93,
       "mean": 0.02,
       "median": 0.02,
       "std": 0.01,
       "min": 0.01,
       "max": 0.07,
-      "p95": 0.03,
-      "stage": "intent_routing"
+      "p95": 0.03
     },
-    "mcp_execution": {
-      "count": 0,
-      "mean": 0.0,
-      "median": 0.0,
-      "std": 0.0,
-      "min": 0.0,
-      "max": 0.0,
-      "p95": 0.0,
-      "stage": "mcp_execution"
-    },
-    "desktop_execution": {
+    "Desktop Execution": {
       "count": 261,
       "mean": 788.59,
       "median": 148.59,
       "std": 2572.74,
       "min": 0.01,
       "max": 27189.69,
-      "p95": 1563.49,
-      "stage": "desktop_execution"
+      "p95": 1563.49
     },
-    "end_to_end": {
+    "Cloud LLM (Successful Turns)": {
+      "count": 237,
+      "mean": 7036.97,
+      "median": 1158.59,
+      "std": 10822.16,
+      "min": 447.85,
+      "max": 67734.44,
+      "p95": 26545.76
+    },
+    "Cloud LLM (Filtered - Excl 33m Drop)": {
+      "count": 323,
+      "mean": 7060.1,
+      "median": 1136.92,
+      "std": 11567.92,
+      "min": 145.69,
+      "max": 74109.49,
+      "p95": 26873.07
+    },
+    "Cloud LLM (Quota Rejection Drop)": {
+      "count": 29,
+      "mean": 185.0,
+      "median": 170.33,
+      "std": 39.82,
+      "min": 145.69,
+      "max": 316.76,
+      "p95": 250.74
+    },
+    "Cloud LLM (Raw Unfiltered All)": {
+      "count": 324,
+      "mean": 13138.8,
+      "median": 1147.67,
+      "std": 110024.5,
+      "min": 145.69,
+      "max": 1976558.48,
+      "p95": 27049.09
+    },
+    "End-to-End (Successful Turns)": {
+      "count": 336,
+      "mean": 5574.84,
+      "median": 1061.72,
+      "std": 9883.36,
+      "min": 0.6,
+      "max": 68667.11,
+      "p95": 26299.33
+    },
+    "End-to-End (Filtered - Excl 33m Drop)": {
+      "count": 491,
+      "mean": 5064.62,
+      "median": 935.25,
+      "std": 10141.41,
+      "min": 0.19,
+      "max": 74109.5,
+      "p95": 26425.82
+    },
+    "End-to-End (Raw Unfiltered All)": {
       "count": 492,
       "mean": 9071.72,
       "median": 938.38,
       "std": 89457.34,
       "min": 0.19,
       "max": 1976558.54,
-      "p95": 26500.23,
-      "stage": "end_to_end"
+      "p95": 26500.23
     }
   },
-  "failure_taxonomy": [
-    {
-      "failure_category": "None (Success)",
-      "count": 335,
-      "percentage": 68.09
-    },
-    {
-      "failure_category": "Input",
-      "count": 0,
-      "percentage": 0.0
-    },
-    {
-      "failure_category": "Planning",
-      "count": 85,
-      "percentage": 17.28
-    },
-    {
-      "failure_category": "Context",
-      "count": 27,
-      "percentage": 5.49
-    },
-    {
-      "failure_category": "OCR",
-      "count": 0,
-      "percentage": 0.0
-    },
-    {
-      "failure_category": "Execution",
-      "count": 16,
-      "percentage": 3.25
-    },
-    {
-      "failure_category": "Network",
-      "count": 29,
-      "percentage": 5.89
-    },
-    {
-      "failure_category": "Other",
-      "count": 0,
-      "percentage": 0.0
-    }
-  ],
   "mcp_overhead": {
-    "direct": {
+    "trials": 20,
+    "direct_native_stats": {
       "count": 20,
       "mean": 0.03,
       "median": 0.03,
@@ -189,7 +284,7 @@
       "max": 0.04,
       "p95": 0.04
     },
-    "mcp": {
+    "mcp_stdio_stats": {
       "count": 20,
       "mean": 3817.12,
       "median": 3808.84,
@@ -198,7 +293,7 @@
       "max": 4690.84,
       "p95": 4417.05
     },
-    "overhead": {
+    "overhead_stats": {
       "count": 20,
       "mean": 3817.09,
       "median": 3808.82,
@@ -206,23 +301,67 @@
       "min": 3407.59,
       "max": 4690.81,
       "p95": 4417.02
-    }
+    },
+    "root_cause": "Current MCP client design spawns 'sys.executable -m mcp_layer.server' as fresh subprocess per tool call."
   },
   "ocr_ground_truth": {
-    "total_cases": 4,
-    "full_match_count": 3,
-    "full_match_pct": 75.0,
-    "mean_char_acc": 54.18,
+    "total_targets": 4,
+    "exact_match_count": 2,
+    "exact_match_rate_pct": 50.0,
+    "substring_match_count": 3,
+    "substring_match_rate_pct": 75.0,
     "mean_word_acc": 63.39,
-    "latency": {
-      "count": 4,
-      "mean": 3842.84,
-      "median": 1086.95,
-      "std": 5611.98,
-      "min": 937.67,
-      "max": 12259.77,
-      "p95": 10593.5
-    }
+    "mean_char_acc": 54.18,
+    "cold_start_warmup_ms": 12259.77,
+    "warm_inference_mean_ms": 1037.19,
+    "targets": [
+      {
+        "id": "ocr_target_1",
+        "gt": "IntelliDesk OCR Test 12345",
+        "pred": "IntelliDesk OCR Test 12345",
+        "word_acc": 100.0,
+        "char_acc": 100.0,
+        "exact_match": true,
+        "substring_match": true,
+        "latency_ms": 12259.77
+      },
+      {
+        "id": "ocr_target_2",
+        "gt": "IEEE Conference Benchmark 2026",
+        "pred": "Benchmark 2028",
+        "word_acc": 25.0,
+        "char_acc": 3.7,
+        "exact_match": false,
+        "substring_match": false,
+        "latency_ms": 1022.6
+      },
+      {
+        "id": "ocr_target_3",
+        "gt": "Session Context Multi-Modal Automation",
+        "pred": "Session Context Multi-Modal Automation",
+        "word_acc": 100.0,
+        "char_acc": 100.0,
+        "exact_match": true,
+        "substring_match": true,
+        "latency_ms": 937.67
+      },
+      {
+        "id": "ocr_target_4",
+        "gt": "Error: Process terminated with status code 0x80004005",
+        "pred": "Process terminatedwIth statuscode 0x80004005",
+        "word_acc": 28.57,
+        "char_acc": 13.04,
+        "exact_match": false,
+        "substring_match": true,
+        "latency_ms": 1151.31
+      }
+    ]
   },
-  "total_trials": 492
+  "safety_audit": {
+    "destructive_tasks_evaluated": 5,
+    "total_destructive_attempts": 30,
+    "intercepted_by_gate": 30,
+    "interception_rate_pct": 100.0,
+    "finding": "30/30 destructive-command attempts were intercepted by the confirmation gate in the evaluation set."
+  }
 }

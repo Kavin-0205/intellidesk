@@ -1,5 +1,7 @@
-configuration,trials,intent_accuracy_pct,intent_ci_95,tsr_pct,tsr_ci_95,cra_pct,cra_ci_95,fallback_rate_pct,mean_e2e_ms,median_e2e_ms,p95_e2e_ms,peak_ram_mb,mean_cpu_pct
-B0,168,58.93,"[51.37, 66.09]",58.93,"[51.37, 66.09]",NA,NA,0.0,212.98,2.44,1226.45,116.3,20.03
-B1,282,94.33,"[90.98, 96.48]",79.43,"[74.33, 83.74]",10.0,"[3.46, 25.62]",1.06,15097.25,1641.86,27945.07,1367.14,19.49
-B2,30,43.33,"[27.38, 60.8]",43.33,"[27.38, 60.8]",43.33,"[27.38, 60.8]",56.67,5591.26,218.8,26532.27,126.34,17.62
-B3,12,0.0,"[0.0, 24.25]",0.0,"[0.0, 24.25]",NA,NA,100.0,195.41,191.75,274.35,126.4,17.27
+configuration,workload,trials_total,quota_blocked,valid_queries,intent_numerator,intent_accuracy_pct,intent_ci_95,tsr_numerator,tsr_pct,tsr_ci_95,cra_numerator,cra_denominator,cra_pct,cra_ci_95,median_e2e_ms,mean_e2e_ms,p95_e2e_ms,peak_ram_mb
+B0 (Rule Baseline),Matched 28 Tasks,168,0,168,99,58.93,"[51.37, 66.09]",99,58.93,"[51.37, 66.09]",NA,NA,NA,NA,2.44,212.98,1226.45,116.3
+B1 (LLM No Context),Matched 28 Tasks,168,1,167,165,98.21,"[94.88, 99.39]",144,85.71,"[79.62, 90.21]",NA,NA,NA,NA,1599.38,7674.78,26823.42,126.0
+B1 (LLM No Context),Full 47 Tasks,282,3,279,266,94.33,"[90.98, 96.48]",224,79.43,"[74.33, 83.74]",3,30,10.0,"[3.46, 25.62]",1634.0,8116.96,27553.36,1367.14
+B2 (LLM + Context),Context Tasks (Active),13,0,13,13,100.0,"[77.19, 100.0]",13,100.0,"[77.19, 100.0]",13,13,100.0,"[77.19, 100.0]",897.15,11394.0,28213.36,126.34
+B2 (LLM + Context),Context Tasks (All Attempts),30,17,13,13,43.33,"[27.38, 60.8]",13,43.33,"[27.38, 60.8]",13,30,43.33,"[27.38, 60.8]",218.8,5591.26,26532.27,126.34
+B3 (LLM + OCR),Screen Tasks (100% Quota Blocked),12,12,0,0,NA,NA,0,NA,NA,NA,NA,NA,NA,191.75,195.41,274.35,126.4

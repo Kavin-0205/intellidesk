@@ -1,8 +1,11 @@
-stage,count,mean,median,std,min,max,p95
-input_processing,44,0.01,0.01,0.01,0.01,0.03,0.03
-llm_inference,324,13138.8,1147.67,110024.5,145.69,1976558.48,27049.09
-ocr_processing,12,10409.85,6748.68,6813.54,6329.43,27189.69,23131.11
-intent_routing,93,0.02,0.02,0.01,0.01,0.07,0.03
-mcp_execution,0,0.0,0.0,0.0,0.0,0.0,0.0
-desktop_execution,261,788.59,148.59,2572.74,0.01,27189.69,1563.49
-end_to_end,492,9071.72,938.38,89457.34,0.19,1976558.54,26500.23
+stage,count,mean_ms,median_ms,std_ms,min_ms,max_ms,p95_ms,description
+Input Processing,44,0.01,0.01,0.01,0.01,0.03,0.03,Local string preparation and reference checking
+Intent Routing,93,0.02,0.02,0.01,0.01,0.07,0.03,Local internal action dispatching
+Desktop Execution,261,788.59,148.59,2572.74,0.01,27189.69,1563.49,Native OS process/window/file execution
+Cloud LLM (Successful Turns),237,7036.97,1158.59,10822.16,447.85,67734.44,26545.76,Normal Groq API inference responses
+Cloud LLM (Filtered - Excl 33m Drop),323,7060.1,1136.92,11567.92,145.69,74109.49,26873.07,All cloud inference queries excluding single TCP drop outlier
+Cloud LLM (Quota Rejection Drop),29,185.0,170.33,39.82,145.69,316.76,250.74,HTTP 429 rate limit immediate gateway rejection
+Cloud LLM (Raw Unfiltered All),324,13138.8,1147.67,110024.5,145.69,1976558.48,27049.09,Raw LLM timings including single 32.9m TCP drop
+End-to-End (Successful Turns),336,5574.84,1061.72,9883.36,0.6,68667.11,26299.33,Total turnaround time for successful user commands
+End-to-End (Filtered - Excl 33m Drop),491,5064.62,935.25,10141.41,0.19,74109.5,26425.82,Total turnaround time across all trials excluding socket drop
+End-to-End (Raw Unfiltered All),492,9071.72,938.38,89457.34,0.19,1976558.54,26500.23,Total turnaround time across all 492 recorded trials

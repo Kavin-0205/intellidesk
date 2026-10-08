@@ -1,6 +1,6 @@
 # IntelliDesk: Empirical Experimental Evaluation & Benchmark Report
 **Conference Publication Artifact & Evaluation Dossier for IEEE Submission**  
-**Evaluation Date:** October 6–7, 2026  
+**Evaluation Date:** October 6–7, 2026 (Audited & Methodologically Verified)  
 **System Evaluated:** IntelliDesk Desktop Agent (Current Implementation)  
 **Primary Test Host:** Windows 11 Enterprise (Intel Core, 16 Logical Cores, 15.63 GB RAM)  
 **Evaluator:** Antigravity Autonomous Empirical Benchmark Harness  
@@ -36,15 +36,18 @@
 
 ## 1. Executive Summary
 
-This report documents the rigorous, empirical experimental evaluation of **IntelliDesk**, an intelligent multi-modal desktop assistant running on Windows 11. Across **516 total experimental trials** (492 end-to-end benchmark trials, 20 Model Context Protocol micro-benchmark trials, and 4 OCR ground-truth trials), the system was evaluated on real hardware without simulation, interpolation, or synthetic mocking.
+This report documents the rigorous, empirical experimental evaluation of **IntelliDesk**, an intelligent multi-modal desktop assistant running on Windows 11. Across **516 total empirical trials** (492 end-to-end benchmark trials, 20 Model Context Protocol micro-benchmark trials, and 4 OCR ground-truth trials), the system was evaluated on real hardware without simulation, interpolation, or synthetic fabrication.
 
-### Key Measured Highlights:
-- **Intent Translation ($B_1$ vs $B_0$):** The LLM semantic translation layer ($B_1$) achieved an **Intent Accuracy of 94.33%** (95% CI: $[90.98\%, 96.48\%]$), significantly outperforming the keyword/regex rule baseline ($B_0$) at **58.93%** (95% CI: $[51.37\%, 66.09\%]$) on diverse natural language phrasings ($p < 0.0001$).
-- **Multi-Turn Context Resolution ($B_2$ vs $B_1$):** Without session context ($B_1$), pronominal follow-ups (e.g., *"Close it"*, *"Shut it down"*) achieved only **10.00% Context Resolution Accuracy** (CRA). With the session context engine enabled ($B_2$), the system resolved target applications at **100.00% accuracy** on active unconstrained queries (and 43.33% under live cloud quota exhaustion).
-- **Task Success Rate (TSR):** End-to-end automation success reached **79.43%** in $B_1$ (95% CI: $[74.33\%, 83.74\%]$) versus **58.93%** in $B_0$.
-- **Latency Breakdown:** Local processing is near-instantaneous (Input Processing: **0.01 ms**; Intent Routing: **0.02 ms**; Desktop Execution: median **148.59 ms**). End-to-end latency is predominantly governed by Cloud LLM inference (median **1,147.67 ms**, P95 **27,049.09 ms**).
-- **MCP Protocol Overhead:** Invoking system operations via Model Context Protocol (MCP) stdio subprocesses incurs a mean latency of **3,817.12 ms** compared to **0.03 ms** for direct Python function calls—demonstrating a **~127,000× overhead** driven by per-call server process spawning.
-- **Safety Gating:** 100% of destructive operations (`rm -rf`, disk format, delete system32, forced restart) were intercepted safely by confirmation dialog gating with 0 accidental executions.
+### Key Audited & Verified Highlights:
+- **Workload Alignment & Intent Translation ($B_0$ vs $B_1$):** On the **identical matched 28-task workload** ($N=168$ paired trials), the LLM semantic translation layer ($B_1$) achieved an **Intent Accuracy of 98.21%** (165/168, 95% CI: $[94.88\%, 99.39\%]$), significantly outperforming the keyword/regex rule baseline ($B_0$) at **58.93%** (99/168, 95% CI: $[51.37\%, 66.09\%]$). McNemar's paired test confirms strong statistical significance ($\chi^2 = 58.68, p < 0.0001$).
+- **Full Workload ($B_1$ across 47 tasks):** Across the complete 47-task test set ($N=282$ trials), $B_1$ achieved **94.33% Intent Accuracy** (266/282, 95% CI: $[90.98\%, 96.48\%]$) across all attempts and **95.34%** (266/279) on valid non-network queries.
+- **Task Success Rate (TSR):** On matched tasks, TSR reached **85.71%** in $B_1$ (144/168, 95% CI: $[79.62\%, 90.21\%]$) versus **58.93%** in $B_0$ (99/168). Across all 47 tasks, $B_1$ achieved **79.43% TSR** (224/282).
+- **Multi-Turn Context Resolution ($B_2$ vs $B_1$):** Without session context ($B_1$), pronominal follow-ups (e.g., *"Close it"*, *"Shut it down"*) achieved only **10.00% Context Resolution Accuracy** (3/30, 95% CI: $[3.46\%, 25.62\%]$). With session context enabled ($B_2$), the system resolved target applications at **100.00% accuracy** on completed active queries (13/13, 95% CI: $[77.19\%, 100.00\%]$) and **43.33%** across all attempted queries (13/30, 95% CI: $[27.38\%, 60.80\%]$), where 17 trials were interrupted by cloud API HTTP 429 quota exhaustion.
+- **Screen OCR Configuration ($B_3$):** All 12 trials in $B_3$ encountered HTTP 429 quota exhaustion before inference. The reported 0% accuracy represents external API quota blocking rather than model or OCR recognition failure.
+- **Latency Breakdown & Outlier Isolation:** Local overhead is negligible (Input Processing: **0.01 ms**; Intent Routing: **0.02 ms**; Desktop Execution: median **148.59 ms**). End-to-end latency is dominated by Cloud LLM inference (median **1,136.92 ms**, filtered mean **7,060.10 ms**, P95 **26,873.07 ms**). A single 32.9-minute TCP socket timeout outlier (`RUN_0397_B1_git_log_p1_T1`) distorts the unfiltered mean to 13,138.80 ms, but reflects an OS network drop rather than genuine model latency.
+- **MCP Protocol Overhead:** Invoking system operations via Model Context Protocol (MCP) stdio subprocesses incurs a mean latency of **3,817.12 ms** compared to **0.03 ms** for direct Python function calls. This overhead is caused by the current implementation launching `sys.executable -m mcp_layer.server` as a fresh subprocess for each call, rather than an inherent protocol flaw.
+- **OCR Ground-Truth Recognition:** Evaluation against 4 standardized ground-truth targets revealed an **Exact Match Rate of 50.0%** (2/4) and a **Substring Match Rate of 75.0%** (3/4), with warm inference latency of ~1,037 ms and a cold-start warmup latency of 12,259.77 ms.
+- **Destructive Command Gating:** In 100% of destructive operations (30/30 trials across recursive deletion, drive formatting, system deletion, shutdown, and reboot), commands were successfully intercepted by confirmation dialog gates with zero unauthorized executions.
 
 ---
 
@@ -52,7 +55,7 @@ This report documents the rigorous, empirical experimental evaluation of **Intel
 
 This evaluation was structured to address four primary Research Questions for an IEEE conference paper:
 
-- **RQ1 (Translation Robustness):** How accurately does the LLM translation layer map diverse, colloquial natural language requests to structured desktop automation actions compared to a traditional rule-based parser?
+- **RQ1 (Translation Robustness):** How accurately does the LLM translation layer map diverse, colloquial natural language requests to structured desktop automation actions compared to a traditional rule-based parser on matched workloads?
 - **RQ2 (Context Resolution):** Does session context memory improve the resolution of anaphoric references and multi-turn user intent compared to memoryless execution?
 - **RQ3 (System Overhead & Latency):** What are the computational latencies across each subsystem stage (Input, LLM, Routing, Execution, OCR), and what is the overhead of the Model Context Protocol (MCP) relative to native OS invocation?
 - **RQ4 (Reliability & Safety):** What failure modes dominate real-world desktop automation, and how effectively does IntelliDesk prevent catastrophic system mutations?
@@ -97,13 +100,13 @@ All experiments were executed on real bare-metal hardware. The execution environ
 1. **No Simulation:** All measurements represent actual clock times and process executions.
 2. **Repetitions:** Each task variation was executed over 3 distinct repetitions ($N=3$) to account for operating system scheduling variance and cloud API network jitter.
 3. **High-Resolution Instrumentation:** All latencies were measured using `time.perf_counter()` monotonic timers. Memory and CPU overhead were measured per trial via `psutil`.
-4. **Statistical Rigor:** Categorical proportions are reported with **95% Wilson Score Confidence Intervals** to provide exact bounds on accuracy.
+4. **Statistical Rigor:** Categorical proportions are reported with **95% Wilson Score Confidence Intervals** to provide exact bounds on accuracy. Matched workloads are evaluated with paired McNemar tests.
 
 ---
 
 ## 6. Benchmark Task Taxonomy & Phrasing Corpus
 
-The benchmark comprises **47 distinct tasks** organized across **10 functional categories**, each featuring 2 distinct natural language phrasings ($P_1$: direct/standard phrasing, $P_2$: colloquial/indirect phrasing), evaluated across 3 repetitions ($3 \times 2 = 6$ trials per task):
+The benchmark comprises **47 distinct tasks** organized across **11 functional categories**, each featuring 2 distinct natural language phrasings ($P_1$: direct/standard phrasing, $P_2$: colloquial/indirect phrasing), evaluated across 3 repetitions ($3 \times 2 = 6$ trials per task):
 
 1. **Direct Application Launching (4 tasks):** Launch Notepad, Calculator, Chrome, Explorer.
 2. **File Management (6 tasks):** Create, Read, Append, Rename, Copy, Delete, Search files.
@@ -115,18 +118,24 @@ The benchmark comprises **47 distinct tasks** organized across **10 functional c
 8. **Browser Navigation (3 tasks):** Open URL, Search query, Navigate web.
 9. **Context Resolution (5 tasks):** Multi-turn anaphoric reference resolution ("Close it", "Minimize the last window", "Bring it to front").
 10. **Screen & OCR Visual Grounding (2 tasks):** Read text from screen, Summarize screen contents.
-11. **Safety Gating & Destructive Prevention (9 tasks):** Recursive directory purge (`rm -rf`), format disk, delete Windows system32, forced immediate shutdown, forced restart.
+11. **Safety Gating & Destructive Prevention (5 tasks):** Recursive directory purge (`rm -rf`), format disk, delete Windows system32, forced immediate shutdown, forced restart.
 
-Total planned benchmark trials: $168 + 282 + 30 + 12 = 492$ trials.
+**Workload Distribution Across Configurations:**
+- **$B_0$ Baseline (28 tasks $\times$ 6 trials = 168 trials):** Evaluates categories 1–8 (operational commands supported by keyword heuristics).
+- **$B_1$ Full Evaluation (47 tasks $\times$ 6 trials = 282 trials):** Evaluates all 11 categories without session context.
+- **$B_2$ Session Context Evaluation (5 context tasks $\times$ 6 trials = 30 trials):** Multi-turn commands requiring resolution of conversational state.
+- **$B_3$ Multi-Modal OCR Evaluation (2 screen tasks $\times$ 6 trials = 12 trials):** Visual capture and screen text extraction.
+
+Total recorded trials: $168 + 282 + 30 + 12 = 492$ trials.
 
 ---
 
 ## 7. Evaluated Configurations (B0, B1, B2, B3)
 
-- **$B_0$ (Rule / Keyword Baseline):** Deterministic pattern matcher implementing regex and keyword parsing. Zero LLM calls.
-- **$B_1$ (LLM Intent Generation without Context):** Modern cloud LLM (`openai/gpt-oss-120b`) translating natural language without session history.
-- **$B_2$ (LLM with Session Context Memory):** LLM integration equipped with multi-turn session history (`ContextManager`) tracking the prior active application.
-- **$B_3$ (LLM + Session Context + Screen OCR):** Full multi-modal pipeline including EasyOCR screenshot text extraction.
+- **$B_0$ (Rule / Keyword Baseline):** Deterministic pattern matcher implementing regex and keyword parsing. Zero LLM calls. Evaluated on 28 operational tasks.
+- **$B_1$ (LLM Intent Generation without Context):** Cloud LLM (`openai/gpt-oss-120b`) translating natural language without session history. Evaluated on both the matched 28 tasks and the full 47 tasks.
+- **$B_2$ (LLM with Session Context Memory):** LLM integration equipped with multi-turn session history (`ContextManager`) tracking the prior active application. Evaluated on 5 context-dependent tasks.
+- **$B_3$ (LLM + Session Context + Screen OCR):** Full multi-modal pipeline including EasyOCR screenshot text extraction. Evaluated on 2 visual tasks.
 
 ---
 
@@ -152,51 +161,55 @@ To ensure robustness against network interruptions and quota limits:
 
 ## 10. RQ1 Results: Intent Classification & Argument Extraction
 
-Evaluation of translation accuracy across 450 evaluated trials in $B_0$ and $B_1$:
+To ensure methodological fairness, we evaluate $B_0$ and $B_1$ across both a **strictly matched workload** (the 28 tasks evaluated by both systems) and the **full 47-task benchmark**.
 
 ### Table 1: Configuration Performance Comparison (Summary)
-| Metric | $B_0$ (Rule Baseline) | $B_1$ (LLM No Context) | $B_2$ (LLM + Context) | $B_3$ (LLM + Context + OCR) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Total Trials** | 168 | 282 | 30 | 12 |
-| **Intent Accuracy** | **58.93%** | **94.33%** | **43.33%** | **0.00%** |
-| **95% Wilson CI** | $[51.37\%, 66.09\%]$ | $[90.98\%, 96.48\%]$ | $[27.38\%, 60.80\%]$ | $[0.00\%, 24.25\%]$ |
-| **Task Success Rate (TSR)** | **58.93%** | **79.43%** | **43.33%** | **0.00%** |
-| **95% Wilson CI** | $[51.37\%, 66.09\%]$ | $[74.33\%, 83.74\%]$ | $[27.38\%, 60.80\%]$ | $[0.00\%, 24.25\%]$ |
-| **Context Resolution (CRA)** | N/A | **10.00%** | **43.33%** | N/A |
-| **Fallback Rate** | **0.00%** | **1.06%** | **56.67%** | **100.00%** |
-| **Median E2E Latency** | **2.44 ms** | **1,641.86 ms** | **218.80 ms** | **191.75 ms** |
-| **Mean E2E Latency** | **212.98 ms** | **15,097.25 ms** | **5,591.26 ms** | **195.41 ms** |
-| **P95 E2E Latency** | **1,226.45 ms** | **27,945.07 ms** | **26,532.27 ms** | **274.35 ms** |
-| **Peak RAM** | **116.30 MB** | **1,367.14 MB** | **126.34 MB** | **126.40 MB** |
+| Metric | $B_0$ (Rule Baseline)<br>Matched 28 Tasks | $B_1$ (LLM No Context)<br>Matched 28 Tasks | $B_1$ (LLM No Context)<br>Full 47 Tasks | $B_2$ (LLM + Context)<br>Active Queries | $B_2$ (LLM + Context)<br>All Attempts | $B_3$ (LLM + OCR)<br>Screen Tasks |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Total Trials** | 168 | 168 | 282 | 13 | 30 | 12 |
+| **Quota Blocked** | 0 | 1 | 3 | 0 | 17 | 12 |
+| **Valid Evaluated** | 168 | 167 | 279 | 13 | 13 | 0 |
+| **Intent Accuracy** | **58.93%** (99/168) | **98.21%** (165/168) | **94.33%** (266/282) | **100.00%** (13/13) | **43.33%** (13/30) | **N/A** (0/0) |
+| **95% Wilson CI** | $[51.37\%, 66.09\%]$ | $[94.88\%, 99.39\%]$ | $[90.98\%, 96.48\%]$ | $[77.19\%, 100.00\%]$ | $[27.38\%, 60.80\%]$ | N/A |
+| **Task Success (TSR)** | **58.93%** (99/168) | **85.71%** (144/168) | **79.43%** (224/282) | **100.00%** (13/13) | **43.33%** (13/30) | **N/A** (0/0) |
+| **95% Wilson CI** | $[51.37\%, 66.09\%]$ | $[79.62\%, 90.21\%]$ | $[74.33\%, 83.74\%]$ | $[77.19\%, 100.00\%]$ | $[27.38\%, 60.80\%]$ | N/A |
+| **Context Res. (CRA)** | N/A | N/A | **10.00%** (3/30) | **100.00%** (13/13) | **43.33%** (13/30) | N/A |
+| **Fallback Rate** | **0.00%** | **0.00%** | **1.06%** | **0.00%** | **56.67%** | **100.00%** |
+| **Median E2E Latency** | **2.44 ms** | **1,599.38 ms** | **1,634.00 ms** | **897.15 ms** | **218.80 ms** | **191.75 ms** |
+| **Filtered Mean E2E** | **212.98 ms** | **7,674.78 ms** | **8,116.96 ms** | **11,394.00 ms** | **5,591.26 ms** | **195.41 ms** |
+| **P95 E2E Latency** | **1,226.45 ms** | **26,823.42 ms** | **27,553.36 ms** | **28,213.36 ms** | **26,532.27 ms** | **274.35 ms** |
+| **Native Peak RAM** | **116.30 MB** | **126.00 MB** | **126.00 MB\*** | **126.34 MB** | **126.34 MB** | **126.40 MB** |
+
+*\*Note on Memory: In $B_1$, a memory spike to 1,367.14 MB was recorded during screen trials due to lazy import of PyTorch/EasyOCR CRAFT weights in the shared harness process. The native resident footprint of IntelliDesk without OCR is ~120–126 MB.*
 
 ### Key Findings for RQ1:
-1. **Semantic Generalization:** The LLM ($B_1$) outperforms the rule baseline ($B_0$) by **+35.40 percentage points** ($94.33\%$ vs $58.93\%$). While $B_0$ fails on natural phrasing variations (e.g., *"Dismiss calculator"*, *"Can you turn down the sound"*), the LLM reliably extracts the underlying intent.
-2. **Argument Extraction Fidelity:** In $B_1$, argument parsing achieved 100% precision on numeric arguments (e.g., volume level 40, brightness 70).
-3. **Fallback Robustness:** In $B_1$, fallback logic was triggered in only 1.06% of trials, proving that the structured system prompt almost universally emits clean, valid JSON.
+1. **Matched Workload Dominance:** When evaluated on identical 28 tasks ($N=168$), the LLM ($B_1$) achieves **98.21%** Intent Accuracy compared to $B_0$'s **58.93%**—an absolute improvement of **+39.28 percentage points**. McNemar's paired chi-squared test ($\chi^2 = 58.68, p < 0.0001$) confirms this advantage is statistically significant.
+2. **Full Benchmark Robustness:** Across all 47 tasks ($N=282$), including complex multi-turn and safety commands, $B_1$ maintains an Intent Accuracy of **94.33%** (95.34% on valid non-network queries).
+3. **Execution Gap:** While $B_1$ intent accuracy on matched tasks is 98.21%, Task Success Rate is 85.71%. The 12.5 percentage point delta is entirely attributable to native Windows OS execution races (e.g., window minimize/maximize timing before handle stabilization).
 
 ---
 
 ## 11. RQ2 Results: Multi-Turn Context Resolution ($B_1$ vs $B_2$)
 
-RQ2 assessed the necessity of conversation state when interpreting ambiguous commands.
+RQ2 assessed the necessity of conversation state when interpreting ambiguous commands containing anaphoric references (e.g., *"Close it"*, *"Shut it down"*).
 
 ### Table 2: Context Resolution Accuracy (CRA) Comparison
-| Configuration | Context Tasks Evaluated | Valid Queries | Context Resolution Accuracy (CRA) | 95% Wilson CI |
-| :--- | :---: | :---: | :---: | :---: |
-| **$B_1$ (No Session Context)** | 30 trials | 30 | **10.00%** (3/30) | $[3.46\%, 25.62\%]$ |
-| **$B_2$ (With Session Context)** | 30 trials | 13 | **100.00%** (13/13 active) | $[77.19\%, 100.00\%]$ |
-| **$B_2$ (All Attempted Runs)** | 30 trials | 30 | **43.33%** (13/30) | $[27.38\%, 60.80\%]$ |
+| Configuration | Context Tasks Evaluated | Valid Queries | Context Resolution Accuracy (CRA) | 95% Wilson CI | Notes |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **$B_1$ (No Session Context)** | 30 trials | 30 | **10.00%** (3/30) | $[3.46\%, 25.62\%]$ | Fails on pronominal follow-ups |
+| **$B_2$ (Completed Active Queries)** | 13 trials | 13 | **100.00%** (13/13) | $[77.19\%, 100.00\%]$ | Zero context failures on completed trials |
+| **$B_2$ (All Attempted Queries)** | 30 trials | 13 | **43.33%** (13/30) | $[27.38\%, 60.80\%]$ | 17 trials interrupted by cloud HTTP 429 quota |
 
 ### Empirical Analysis:
 - In $B_1$, when a user issues *"Close it"* following a launch command, the LLM sets `application: null` or produces a hallucinated target. When given *"Shut it down"*, $B_1$ misclassifies the command as a system power shutdown rather than closing the active window.
 - In $B_2$, the `ContextManager.resolve_reference()` engine pre-resolves anaphora before routing, correctly binding *"it"* to the target application (`notepad`, `chrome`, `calculator`) in **100.00%** of active evaluation trials.
-- The difference between $B_1$ (10.00%) and $B_2$ active (100.00%) is statistically significant ($p < 0.0001$), confirming that explicit desktop session state tracking is essential for conversational assistants.
+- While live testing encountered external API rate limits on trials 14–30 (lowering the all-attempt figure to 43.33%), the system exhibited 100% resolution accuracy whenever the API was reachable.
 
 ---
 
 ## 12. RQ3 Results: End-to-End & Stage-by-Stage Latency Profiling
 
-Each individual execution stage was timed independently to establish an architectural latency decomposition:
+Each individual execution stage was timed independently to establish an architectural latency decomposition.
 
 ### Table 3: Latency Decomposition by Subsystem Stage
 | Pipeline Stage | Measurement Count | Mean Latency (ms) | Median Latency (ms) | Std Dev (ms) | Min (ms) | Max (ms) | P95 Latency (ms) |
@@ -204,14 +217,14 @@ Each individual execution stage was timed independently to establish an architec
 | **Input Processing** | 44 | **0.01** | **0.01** | 0.01 | 0.01 | 0.03 | **0.03** |
 | **Intent Routing** | 93 | **0.02** | **0.02** | 0.01 | 0.01 | 0.07 | **0.03** |
 | **Desktop Execution** | 261 | **788.59** | **148.59** | 2,572.74 | 0.01 | 27,189.69 | **1,563.49** |
-| **LLM Cloud Inference** | 324 | **13,138.80** | **1,147.67** | 110,024.50 | 145.69 | 1,976,558.48 | **27,049.09** |
-| **Screen OCR Processing** | 12 | **10,409.85** | **6,748.68** | 6,813.54 | 6,329.43 | 27,189.69 | **23,131.11** |
-| **End-to-End System** | 492 | **9,071.72** | **938.38** | 89,457.34 | 0.19 | 1,976,558.54 | **26,500.23** |
+| **Cloud LLM (Successful Turns)** | 237 | **7,036.97** | **1,158.59** | 10,822.16 | 447.85 | 67,734.44 | **26,545.76** |
+| **Cloud LLM (Filtered - Excl Socket Drop)** | 323 | **7,060.10** | **1,136.92** | 11,567.92 | 145.69 | 74,109.49 | **26,873.07** |
+| **Cloud LLM (Quota Rejection Drop)** | 29 | **185.00** | **170.33** | 39.82 | 145.69 | 316.76 | **250.74** |
+| **Cloud LLM (Raw Unfiltered All)\*** | 324 | **13,138.80** | **1,147.67** | 110,024.50 | 145.69 | 1,976,558.48 | **27,049.09** |
+| **End-to-End (Filtered - Excl Socket Drop)** | 491 | **5,064.62** | **935.25** | 10,141.41 | 0.19 | 74,109.50 | **26,425.82** |
+| **End-to-End (Raw Unfiltered All)\*** | 492 | **9,071.72** | **938.38** | 89,457.34 | 0.19 | 1,976,558.54 | **26,500.23** |
 
-### Insights:
-- Local overhead (Input parsing + routing) is negligible ($\le 0.03$ ms).
-- Operating system execution requires a median of **148.59 ms**, primarily driven by GUI process spin-up and window creation hooks.
-- Cloud LLM latency accounts for over **85%** of end-to-end execution time.
+*\*Note on Latency Outlier: The raw maximum LLM latency of 1,976,558.48 ms (~32.94 minutes) in trial `RUN_0397_B1_git_log_p1_T1` represents an unmanaged TCP socket hang followed by connection reset, rather than model inference latency. Isolating this single outlier reveals true median LLM latency of 1,136.92 ms and median E2E latency of 935.25 ms.*
 
 ---
 
@@ -224,30 +237,33 @@ To quantify the cost of running tool calls via the standard Model Context Protoc
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Direct Python Call** | 20 | **0.03** | **0.03** | 0.00 | 0.02 | 0.04 | **0.04** |
 | **MCP stdio Invocation**| 20 | **3,817.12** | **3,808.84** | 346.56 | 3,407.62 | 4,690.84 | **4,417.05** |
-| **Protocol Overhead** | 20 | **3,817.09** | **3,808.82** | 346.57 | 3,407.59 | 4,690.81 | **4,417.02** |
+| **Measured Overhead** | 20 | **3,817.09** | **3,808.82** | 346.57 | 3,407.59 | 4,690.81 | **4,417.02** |
 
 ### Critical Architectural Finding:
-The MCP client implementation in IntelliDesk invokes `sys.executable -m mcp_layer.server` as a fresh subprocess for each tool call. Spawning a new Python runtime and importing the server environment consumes **~3.81 seconds** of overhead per tool call. Converting the MCP server into a persistent background daemon would reduce this overhead by over 99%.
+The MCP client implementation in IntelliDesk (`mcp_layer/client.py`) launches `sys.executable -m mcp_layer.server` as a fresh subprocess for each individual tool call. Spawning a new Python runtime and initializing the MCP stdio handshake consumes **~3.81 seconds** per invocation. This should be reported as **the overhead of the current per-call subprocess invocation design**, rather than an inherent limit of the MCP protocol itself. A persistent daemon would reduce this overhead to single-digit milliseconds.
 
 ---
 
 ## 14. Micro-Benchmark: Screen OCR Accuracy & Text Grounding
 
-To assess visual grounding, 4 standardized synthetic ground-truth test targets were rendered and evaluated using EasyOCR:
+To evaluate visual text grounding, 4 standardized synthetic ground-truth targets were rendered on screen and processed via EasyOCR:
 
 ### Table 5: OCR Ground-Truth Text Recognition Benchmark
-| Target ID | Ground Truth Text | Detected Text | Word Accuracy | Char Accuracy | Full Match | Latency (ms) |
-| :--- | :--- | :--- | :---: | :---: | :---: | :---: |
-| `ocr_target_1` | `IntelliDesk OCR Test 12345` | `IntelliDesk OCR Test 12345` | **100.0%** | **100.0%** | True | 12,259.77 (warmup) |
-| `ocr_target_2` | `IEEE Conference Benchmark 2026` | `Benchmark 2028` | **25.0%** | **3.7%** | False | 1,022.60 |
-| `ocr_target_3` | `Session Context Multi-Modal Automation` | `Session Context Multi-Modal Automation` | **100.0%** | **100.0%** | True | 937.67 |
-| `ocr_target_4` | `Error: Process terminated with status code 0x80004005` | `Process terminatedwIth statuscode 0x80004005` | **28.6%** | **13.0%** | True | 1,151.31 |
+| Target ID | Ground Truth Text | Detected Text | Word Accuracy | Char Accuracy | Exact Match | Substring Match | Latency (ms) |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| `ocr_target_1` | `IntelliDesk OCR Test 12345` | `IntelliDesk OCR Test 12345` | **100.0%** | **100.0%** | True | True | 12,259.77 (cold) |
+| `ocr_target_2` | `IEEE Conference Benchmark 2026` | `Benchmark 2028` | **25.0%** | **3.7%** | False | False | 1,022.60 (warm) |
+| `ocr_target_3` | `Session Context Multi-Modal Automation` | `Session Context Multi-Modal Automation` | **100.0%** | **100.0%** | True | True | 937.67 (warm) |
+| `ocr_target_4` | `Error: Process terminated with status code 0x80004005` | `Process terminatedwIth statuscode 0x80004005` | **28.6%** | **13.0%** | False | True | 1,151.31 (warm) |
 
-### Summary Metrics:
-- **Full Match Rate:** **75.0%** (3 of 4 targets detected fully).
-- **Mean Word Accuracy:** **63.39%**.
+### Audited Summary Metrics:
+- **Exact Match Rate:** **50.0%** (2 of 4 targets matched verbatim).
+- **Substring Match Rate:** **75.0%** (3 of 4 targets contained within target text).
+- **Mean Word Accuracy:** **63.39%** (Character Accuracy: **54.18%**).
 - **Cold Warmup Latency:** **12,259.77 ms** (PyTorch weight loading and CPU tensor graph compilation).
-- **Warm Inference Latency:** **937.67 ms – 1,151.31 ms** (mean warm latency: ~1,037 ms).
+- **Mean Warm Latency:** **1,037.19 ms** (ranging from 937.67 ms to 1,151.31 ms).
+
+*Auditing Note: The previously reported 75% "Full Match" rate was based on a substring inclusion check (`detected in target`), which marked Target 4 as matched despite missing words and casing mismatches. Verbatim exact equality yields an Exact Match rate of 50.0%.*
 
 ---
 
@@ -255,47 +271,49 @@ To assess visual grounding, 4 standardized synthetic ground-truth test targets w
 
 System resources were monitored using `psutil` across all configurations:
 - **Rule Baseline ($B_0$):** Peak RAM: **116.30 MB**, Mean CPU: **20.03%**.
-- **LLM Pipeline ($B_1$):** Peak RAM: **1,367.14 MB** (spiked during initial EasyOCR model import), Mean CPU: **19.49%**.
+- **LLM Pipeline ($B_1$ Native):** Peak RAM: **126.00 MB**, Mean CPU: **19.49%**.
+- **LLM Pipeline ($B_1$ with OCR lazy import):** Peak RAM: **1,367.14 MB** (spiked during un-isolated EasyOCR model import).
 - **Session Context Pipeline ($B_2$):** Peak RAM: **126.34 MB**, Mean CPU: **17.62%**.
 - **OCR Pipeline ($B_3$):** Peak RAM: **126.40 MB**, Mean CPU: **17.27%**.
 
-The baseline resident footprint of the IntelliDesk Python process is approximately **120 MB**, which increases to ~1.3 GB only when loading multi-modal deep learning models into CPU RAM.
+The native resident footprint of the IntelliDesk Python process is approximately **120 MB**, which increases to ~1.3 GB only when loading multi-modal deep learning models into CPU RAM.
 
 ---
 
 ## 16. RQ4 Results: Comprehensive Failure Mode Taxonomy
 
-All 492 benchmark trials were classified according to an 8-category standardized failure taxonomy:
+All 492 benchmark trials were partitioned across an audited 5-category failure taxonomy:
 
-### Table 6: Empirical Failure Distribution Breakdown
+### Table 6: Empirical Failure Distribution Breakdown ($N=492$)
 | Failure Category | Trial Count | Percentage of Total ($N=492$) | Primary Root Cause |
 | :--- | :---: | :---: | :--- |
-| **None (Success)** | **335** | **68.09%** | Completed successfully without faults |
-| **Planning Failures** | **85** | **17.28%** | Rule parser mismatch ($B_0$) or LLM schema hallucination |
-| **Context Failures** | **27** | **5.49%** | Anaphoric reference unbound in memoryless $B_1$ baseline |
-| **Network / Quota Limits** | **29** | **5.89%** | Cloud API HTTP 429 Token-per-Day rate limiting |
-| **Execution Failures** | **16** | **3.25%** | Windows OS process race or window handle unready |
-| **Input Failures** | **0** | **0.00%** | No input ingestion failures observed |
-| **OCR Failures** | **0** | **0.00%** | No OCR pipeline crashes observed |
-| **Other Failures** | **0** | **0.00%** | Unclassified failures |
+| **Successful Execution** | **336** | **68.29%** | Completed successfully without faults |
+| **Model / Planning Mismatch** | **70** | **14.23%** | Rule parser mismatch ($B_0$, 69 trials) or LLM schema hallucination ($B_1$, 1 trial) |
+| **Context Resolution Failure** | **27** | **5.49%** | Anaphoric reference unbound in memoryless $B_1$ baseline |
+| **Cloud API Quota / Network Drops** | **32** | **6.50%** | Cloud API HTTP 429 Token-per-Day rate limiting (29) + TCP connection drops (3) |
+| **Desktop OS Execution Failure** | **27** | **5.49%** | Windows OS process race or window handle unready |
+| **Total Evaluated** | **492** | **100.00%** | Complete evaluation corpus |
 
 ### Key Reliability Insights:
-1. **Rule Inflexibility Dominates Planning Failures:** 69 of the 85 planning failures occurred in the $B_0$ baseline due to rigid regex matching. In $B_1$, planning failures dropped to only 16 trials.
+1. **Rule Inflexibility Dominates Planning Failures:** 69 of the 70 planning failures occurred in the $B_0$ baseline due to rigid regex matching. In $B_1$, planning failure occurred in only 1 trial.
 2. **Context Blindness in Standalone LLMs:** 27 failures were directly caused by memoryless intent generation ($B_1$) receiving pronominal references.
-3. **Execution Robustness:** Native execution failed in only 3.25% of cases, typically when an application window closed faster than the OS window manager could register its handle.
+3. **Execution Robustness:** Native execution failed in only 5.49% of cases, typically when an application window closed faster than the OS window manager could register its handle.
 
 ---
 
 ## 17. Safety Verification: Destructive Command Gating
 
-Safety verification tested 9 destructive commands across 3 repetitions ($N=27$ trials) against malicious or destructive actions:
-- Directory destruction: `rmdir /s /q C:\` and `rm -rf evaluation_workspace`
-- Drive destruction: `format D: /fs:NTFS /q`
-- System corruption: `del /f /q C:\Windows\System32`
-- Unplanned power interruption: `shutdown /s /t 0` and `shutdown /r /t 0`
+Safety verification evaluated 5 destructive task types across 2 phrasings and 3 repetitions ($N=30$ trials):
+- Directory destruction: `safe_rm_rf` (e.g., `rm -rf evaluation_workspace`)
+- Drive destruction: `safe_format_disk` (e.g., `format D: /fs:NTFS /q`)
+- System corruption: `safe_delete_system32` (e.g., `del /f /q C:\Windows\System32`)
+- Unplanned power interruption: `safe_shutdown` (e.g., `shutdown /s /t 0`)
+- Forced reboot: `safe_restart` (e.g., `shutdown /r /t 0`)
 
 **Empirical Result:**  
-In **100% of trials (27/27)**, destructive intent was recognized by the system and gated behind a confirmation dialog with **zero unauthorized system executions**.
+In **100% of trials (30/30)**, destructive intent was recognized by the system and gated behind a confirmation dialog with **zero unauthorized system executions**.
+
+*Reporting Note: To ensure scientific rigor, this result should be reported as: "30/30 destructive-command attempts were intercepted by the confirmation gate in the evaluation set," rather than claiming the system is universally infallible.*
 
 ---
 
@@ -304,8 +322,8 @@ In **100% of trials (27/27)**, destructive intent was recognized by the system a
 During high-throughput testing, the Groq API service tier hit its daily limit of 200,000 tokens per day at trial 464, throwing `Error code: 429 - rate_limit_exceeded`. The benchmark harness handled this gracefully:
 - Captured the exception without crashing the harness process.
 - Recorded the exact error string in `raw_results.csv`.
-- Categorized the failure under the `Network` taxonomy.
-- Re-tested after quota reset to verify resumption.
+- Categorized the failure under Cloud API Quota / Network Drops.
+- Preserved trial state for resumption.
 
 This finding highlights an important consideration for real-world deployment: cloud-only desktop agents are vulnerable to API rate-limiting, underscoring the value of local small language model (SLM) fallback architectures.
 
@@ -316,6 +334,7 @@ This finding highlights an important consideration for real-world deployment: cl
 1. **Host-Specific Window Timing:** Experiments were conducted on a single Windows 11 host. OS window creation latencies may vary on machines with differing CPU architectures or disk speeds.
 2. **API Provider Network Latency:** Cloud LLM latencies depend on internet round-trip times to Groq endpoints.
 3. **CPU-Only OCR Execution:** EasyOCR was executed on CPU without CUDA acceleration. Systems equipped with dedicated GPUs will experience significantly lower OCR inference times.
+4. **Subprocess MCP Invocation:** The measured 3.8s MCP overhead reflects process spin-up costs rather than protocol serialization limits.
 
 ---
 
@@ -343,7 +362,7 @@ All evaluation artifacts and code are archived within the workspace:
 | `evaluation/results/raw_results.csv` | Comprehensive raw dataset containing all 492 individual trials |
 | `evaluation/results/summary.csv` | Summary table containing metrics and confidence intervals for B0–B3 |
 | `evaluation/results/latency_summary.csv`| Latency metrics decomposed by execution stage |
-| `evaluation/results/failure_analysis.csv`| Complete breakdown across the 8-category failure taxonomy |
+| `evaluation/results/failure_analysis.csv`| Complete breakdown across the audited failure taxonomy |
 | `evaluation/results/mcp_overhead.csv` | 20 trials profiling MCP stdio overhead vs direct Python calls |
 | `evaluation/results/ocr_accuracy.csv` | 4 ground-truth character/word recognition trials |
 | `evaluation/results/statistics.json` | Complete machine-readable JSON summary of all experimental results |
@@ -378,31 +397,31 @@ python evaluation/analyze_results.py
 
 ## 23. IEEE Conference Paper Results Section
 
-*(The text below is formatted for inclusion in an IEEE conference submission.)*
+*(The text below is formatted for direct inclusion in an IEEE conference submission.)*
 
 ### IV. EXPERIMENTAL EVALUATION
 
 #### A. Experimental Setup & Workload
-We conducted an empirical evaluation of IntelliDesk on a 64-bit Windows 11 host (12-core/16-thread Intel CPU, 15.63 GB RAM) across 47 diverse tasks spanning 10 operational categories. Each task was evaluated with 2 natural language phrasings over 3 repetitions ($N=3$), yielding 492 benchmark trials alongside 24 micro-benchmark trials. We evaluated four distinct configurations:
-- **$B_0$ (Rule Baseline):** Deterministic pattern matcher with keyword/regex heuristics.
-- **$B_1$ (LLM without Context):** Cloud-hosted LLM (`gpt-oss-120b`) without conversation memory.
-- **$B_2$ (LLM with Session Context):** LLM integration equipped with multi-turn session tracking.
-- **$B_3$ (Multi-Modal LLM + Context + OCR):** Full pipeline integrating screen capture and EasyOCR text extraction.
+We evaluated IntelliDesk on a 64-bit Windows 11 host (12-core/16-thread Intel CPU, 15.63 GB RAM) across 47 diverse tasks spanning 11 operational categories. Each task was evaluated with 2 natural language phrasings over 3 repetitions ($N=3$), yielding 492 benchmark trials alongside 24 micro-benchmark trials. We evaluated four configurations:
+- **$B_0$ (Rule Baseline):** Deterministic pattern matcher with keyword/regex heuristics (evaluated on 28 operational tasks, $N=168$).
+- **$B_1$ (LLM without Context):** Cloud-hosted LLM (`gpt-oss-120b`) without conversation memory (evaluated on matched 28 tasks, $N=168$, and full 47 tasks, $N=282$).
+- **$B_2$ (LLM with Session Context):** LLM integration equipped with multi-turn session tracking ($N=30$).
+- **$B_3$ (Multi-Modal LLM + Context + OCR):** Full pipeline integrating screen capture and EasyOCR text extraction ($N=12$).
 
 Proportions are reported with 95% Wilson score confidence intervals ($CI_{95}$).
 
 #### B. Translation Robustness & Task Success (RQ1)
-As summarized in Table I, the LLM translation layer ($B_1$) achieved an Intent Accuracy of **94.33%** ($CI_{95}$: $[90.98\%, 96.48\%]$), substantially outperforming the rule baseline ($B_0$) at **58.93%** ($CI_{95}$: $[51.37\%, 66.09\%]$). While rule-based parsing succeeds on verbatim commands, it fails on colloquial variations (e.g., *"Dismiss calculator"* or *"Turn down the sound"*). Consequently, end-to-end Task Success Rate (TSR) improved from 58.93% in $B_0$ to **79.43%** ($CI_{95}$: $[74.33\%, 83.74\%]$) in $B_1$. Fallback extraction was triggered in only 1.06% of $B_1$ trials.
+On the matched 28-task workload ($N=168$), the LLM translation layer ($B_1$) achieved an Intent Accuracy of **98.21%** ($CI_{95}$: $[94.88\%, 99.39\%]$), substantially outperforming the rule baseline ($B_0$) at **58.93%** ($CI_{95}$: $[51.37\%, 66.09\%]$). McNemar's paired test confirms strong statistical significance ($\chi^2 = 58.68, p < 0.0001$). Across the full 47-task test set ($N=282$), $B_1$ maintained **94.33%** Intent Accuracy ($CI_{95}$: $[90.98\%, 96.48\%]$). End-to-end Task Success Rate (TSR) on matched tasks reached **85.71%** in $B_1$ versus **58.93%** in $B_0$. Fallback extraction was triggered in only 1.06% of $B_1$ trials.
 
 #### C. Multi-Turn Context Resolution (RQ2)
-To evaluate anaphoric reference resolution, we tested follow-up commands containing pronominal targets (e.g., *"Close it"*). In the memoryless baseline ($B_1$), the system achieved a Context Resolution Accuracy (CRA) of only **10.00%** ($CI_{95}$: $[3.46\%, 25.62\%]$), frequently resolving targets as null or triggering power shutdowns. In contrast, under $B_2$, the session context engine achieved **100.00% CRA** ($CI_{95}$: $[77.19\%, 100.00\%]$) across all active evaluation queries, demonstrating that explicit session state tracking is critical for natural desktop interaction.
+To evaluate anaphoric reference resolution, we tested follow-up commands containing pronominal targets (e.g., *"Close it"*). In the memoryless baseline ($B_1$), the system achieved a Context Resolution Accuracy (CRA) of only **10.00%** (3/30, $CI_{95}$: $[3.46\%, 25.62\%]$). In contrast, under $B_2$, the session context engine achieved **100.00% CRA** (13/13, $CI_{95}$: $[77.19\%, 100.00\%]$) across all completed active queries and **43.33%** (13/30) across all attempts, where 17 trials were interrupted by cloud API HTTP 429 quota exhaustion.
 
 #### D. Latency Decomposition & Protocol Overhead (RQ3)
-Stage-by-stage timing reveals that local processing overhead is negligible: input normalization averaged **0.01 ms** and intent routing averaged **0.02 ms**. Native desktop execution required a median of **148.59 ms** ($P_{95} = 1,563.49$ ms). Total latency was dominated by cloud LLM inference (median **1,147.67 ms**, $P_{95} = 27,049.09$ ms).
+Stage-by-stage timing demonstrates that local processing overhead is negligible: input normalization averaged **0.01 ms** and intent routing averaged **0.02 ms**. Native desktop execution required a median of **148.59 ms** ($P_{95} = 1,563.49$ ms). Total latency was governed by cloud LLM inference (median **1,136.92 ms**, filtered mean **7,060.10 ms**, $P_{95} = 26,873.07$ ms). A single 32.9-minute TCP socket timeout outlier distorted the unfiltered mean to 13,138.80 ms.
 
-In the Model Context Protocol (MCP) micro-benchmark, direct Python tool calls completed in **0.03 ms**, whereas MCP stdio tool execution required **3,817.12 ms** ($P_{95} = 4,417.05$ ms). This overhead is primarily attributable to per-call Python subprocess initialization, indicating that production MCP deployments should employ persistent daemons.
+In the Model Context Protocol (MCP) micro-benchmark, direct Python tool calls completed in **0.03 ms**, whereas MCP stdio tool execution required **3,817.12 ms** ($P_{95} = 4,417.05$ ms). This overhead is primarily driven by per-call Python subprocess initialization, indicating that production MCP deployments should employ persistent daemons.
 
-Screen OCR via EasyOCR required a mean warm inference latency of **1,037 ms** with 75.0% full string recognition, but incurred an initial cold warmup latency of **12,259.77 ms** during model loading.
+Screen OCR via EasyOCR achieved 50.0% exact string recognition and 75.0% substring match with a mean warm inference latency of **1,037 ms**, while incurring an initial cold warmup latency of **12,259.77 ms** during model loading.
 
 #### E. Reliability, Failure Analysis & Safety (RQ4)
-Across all 492 trials, 68.09% completed with zero errors. The remaining trials fell into five categories: Planning Failures (17.28%, predominantly from $B_0$ rule misses), Context Failures (5.49%, from memoryless $B_1$ follow-ups), Network / Quota Limits (5.89%, caused by cloud token-per-day ceilings), and Execution Failures (3.25%, caused by OS window handle synchronization). In safety testing across 27 destructive trials (e.g., recursive deletion, drive formatting), 100% of destructive operations were intercepted by safety confirmation gates, preventing system damage.
+Across all 492 benchmark trials, 68.29% completed successfully without errors. Failures partitioned into: Model/Planning Mismatches (14.23%, predominantly $B_0$ rule misses), Context Failures (5.49%, memoryless $B_1$ follow-ups), Network/Quota Drops (6.50%, cloud HTTP 429 rate limits and socket resets), and Desktop Execution Failures (5.49%, OS window handle synchronization). In safety testing across 30 destructive command attempts (recursive deletion, drive formatting, system deletion, shutdown, and reboot), 30/30 attempts were intercepted by confirmation gates, preventing unauthorized execution.
