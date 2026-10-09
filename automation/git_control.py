@@ -217,15 +217,35 @@ def git_checkout(branch_name: str, repo_path: Optional[str] = None) -> dict:
         return {"success": False, "action": "git_checkout", "branch": branch_name, "error": str(e)}
 
 
-def git_create_branch(branch_name: str, repo_path: Optional[str] = None) -> dict:
-    """Create and switch to a new branch, or checkout if it already exists."""
+def git_create_branch(branch_name: str, repo_path: Optional[str] = None, checkout_if_exists: bool = False) -> dict:
+    """Create and switch to a new branch with precondition check for existing branch."""
+    if not branch_name:
+        return {"success": False, "action": "git_create_branch", "error": "No branch name provided."}
+
     try:
         repo = _find_repo(repo_path)
         existing_branches = [b.name for b in repo.branches]
         if branch_name in existing_branches:
-            repo.git.checkout(branch_name)
-        else:
-            repo.git.checkout("-b", branch_name)
+            if checkout_if_exists:
+                repo.git.checkout(branch_name)
+                return {
+                    "success": True,
+                    "action": "git_create_branch",
+                    "switched_to_existing": True,
+                    "branch": branch_name,
+                    "message": f"Branch '{branch_name}' already exists; switched to existing branch."
+                }
+            else:
+                return {
+                    "success": False,
+                    "action": "git_create_branch",
+                    "branch_exists": True,
+                    "already_exists": True,
+                    "branch": branch_name,
+                    "error": f"Branch '{branch_name}' already exists. Would you like to switch to it instead?"
+                }
+
+        repo.git.checkout("-b", branch_name)
         return {
             "success": True,
             "action": "git_create_branch",

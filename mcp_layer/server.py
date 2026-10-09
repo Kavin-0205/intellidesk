@@ -650,6 +650,13 @@ def close_window(title: str) -> dict:
     return _close(title)
 
 
+@mcp.tool()
+def restore_window(title: str) -> dict:
+    """Restore a minimized or maximized window by its title."""
+    from automation.window_control import restore_window as _rest
+    return _rest(title)
+
+
 # ============================================================
 # SYSTEM POWER COMMANDS (PHASE 9)
 # ============================================================

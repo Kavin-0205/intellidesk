@@ -95,8 +95,23 @@ def extract_text_from_image(image_path: str) -> dict:
                 "lines": [],
             }
 
-        results = reader.readtext(str(image_path))
-        lines = [r[1] for r in results if r[2] > 0.3]  # confidence > 30%
+        results = reader.readtext(
+            str(image_path),
+            mag_ratio=1.5,
+            paragraph=False,
+            contrast_ths=0.1,
+            adjust_contrast=0.5,
+        )
+        # Filter by confidence > 20%
+        valid_results = [r for r in results if r[2] > 0.2]
+
+        # Sort spatially: top-to-bottom (bucketed by ~15px lines), then left-to-right
+        sorted_results = sorted(
+            valid_results,
+            key=lambda r: (round(r[0][0][1] / 15) * 15, r[0][0][0])
+        )
+
+        lines = [r[1] for r in sorted_results]
         combined_text = " ".join(lines).strip()
 
         return {
@@ -105,6 +120,7 @@ def extract_text_from_image(image_path: str) -> dict:
             "lines": lines,
             "character_count": len(combined_text),
             "line_count": len(lines),
+            "raw_results": [{"box": r[0], "text": r[1], "confidence": float(r[2])} for r in results],
         }
 
     except Exception as e:

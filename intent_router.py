@@ -88,6 +88,40 @@ def handle_intent(intent_data: Dict[str, Any], user_command: str = "", speak_res
     result_data: Dict[str, Any] = {}
     is_success = False
 
+    # Ambiguity check: destructive language like 'shut it down' with an active application
+    if context.is_ambiguous_destructive(user_command) and context.current_application:
+        response_text = "Do you want to close the current application or shut down Windows?"
+        print(f"[IntelliDesk]: {response_text}")
+        if speak_response:
+            speak(response_text, wait=False)
+        return {
+            "success": False,
+            "clarification_needed": True,
+            "response": response_text,
+            "data": {
+                "intent": "clarification_needed",
+                "ambiguous_command": user_command,
+                "current_application": context.current_application,
+                "candidates": ["close_application", "power_action"],
+            },
+        }
+
+    # Clarification needed intent
+    if intent == "clarification_needed":
+        response_text = intent_data.get("message", "Could you please clarify your request?")
+        print(f"[IntelliDesk]: {response_text}")
+        if speak_response:
+            speak(response_text, wait=False)
+        return {"success": False, "clarification_needed": True, "response": response_text, "data": intent_data}
+
+    # Validation error intent
+    if intent == "validation_error":
+        response_text = intent_data.get("error", "The command was missing required arguments.")
+        print(f"[IntelliDesk]: {response_text}")
+        if speak_response:
+            speak(response_text, wait=False)
+        return {"success": False, "validation_error": True, "response": response_text, "data": intent_data}
+
     # ========================================================
     # 1. GENERAL AI QUESTIONS (Bypasses MCP)
     # ========================================================
@@ -203,7 +237,9 @@ def handle_intent(intent_data: Dict[str, Any], user_command: str = "", speak_res
     # ========================================================
     elif intent == "close_application":
         # Resolve pronoun references ("close it")
-        if not application:
+        lower_user = user_command.lower().strip() if user_command else ""
+        has_pronoun_ref = any(p in lower_user for p in ("it", "that", "this", "the app", "current app"))
+        if (application and application.lower() in ("it", "this", "that", "the app", "the application", "current app")) or (not application and has_pronoun_ref):
             application = context.current_application
 
         if not application:
@@ -784,6 +820,10 @@ def handle_intent(intent_data: Dict[str, Any], user_command: str = "", speak_res
     elif intent == "window_action":
         win_task = action
         win_title = intent_data.get("title") or ""
+        lower_user = user_command.lower().strip() if user_command else ""
+        has_win_pronoun = any(p in lower_user for p in ("it", "that", "this", "that window", "this window", "the window", "the app", "that app", "current app", "current window"))
+        if (win_title and win_title.lower() in ("it", "this", "that", "the window", "that window", "the app", "current app")) or (not win_title and has_win_pronoun):
+            win_title = context.last_window_target or context.current_application or ""
         print(f"[Router] Window action: {win_task} | title: '{win_title}'")
 
         if win_task == "list":
@@ -870,6 +910,21 @@ def handle_intent(intent_data: Dict[str, Any], user_command: str = "", speak_res
                     f"Closed '{mcp_res.get('title', win_title)}'."
                     if is_success else
                     f"I couldn't close '{win_title}'. {mcp_res.get('error', '')}"
+                )
+
+        elif win_task == "restore":
+            if not win_title:
+                response_text = "Which window would you like me to restore?"
+                is_success = False
+                mcp_res = {}
+            else:
+                mcp_raw = execute_mcp_tool("restore_window", {"title": win_title})
+                mcp_res = _unwrap_tool_res(mcp_raw)
+                is_success = mcp_res.get("success", False)
+                response_text = (
+                    f"Restored '{mcp_res.get('title', win_title)}'."
+                    if is_success else
+                    f"I couldn't restore '{win_title}'. {mcp_res.get('error', '')}"
                 )
 
         else:

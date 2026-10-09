@@ -117,79 +117,126 @@ def press_hotkey(hotkey: Union[str, List[str]]) -> dict:
         }
 
 
-def get_clipboard_text() -> dict:
-    """Get the current text content stored in Windows clipboard."""
-    try:
-        win32clipboard.OpenClipboard()
+def get_clipboard_text(max_retries: int = 5, retry_delay: float = 0.04) -> dict:
+    """Get the current text content stored in Windows clipboard with bounded retries."""
+    last_error = ""
+    for attempt in range(max_retries):
+        opened = False
         try:
+            win32clipboard.OpenClipboard()
+            opened = True
+            text_data = ""
             if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
                 data = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
-                return {
-                    "success": True,
-                    "action": "get_clipboard",
-                    "text": str(data)
-                }
+                text_data = str(data)
             elif win32clipboard.IsClipboardFormatAvailable(win32con.CF_TEXT):
                 data = win32clipboard.GetClipboardData(win32con.CF_TEXT)
-                return {
-                    "success": True,
-                    "action": "get_clipboard",
-                    "text": data.decode("utf-8", errors="ignore")
-                }
+                text_data = data.decode("utf-8", errors="ignore") if isinstance(data, bytes) else str(data)
             else:
-                return {
-                    "success": True,
-                    "action": "get_clipboard",
-                    "text": "",
-                    "note": "Clipboard does not contain text."
-                }
-        finally:
+                text_data = ""
             win32clipboard.CloseClipboard()
-    except Exception as e:
-        return {
-            "success": False,
-            "action": "get_clipboard",
-            "error": str(e)
-        }
-
-
-def set_clipboard_text(text: str) -> dict:
-    """Set the Windows clipboard text content."""
-    try:
-        win32clipboard.OpenClipboard()
-        try:
-            win32clipboard.EmptyClipboard()
-            win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, str(text))
+            opened = False
             return {
                 "success": True,
-                "action": "set_clipboard",
-                "text": text
+                "action": "get_clipboard",
+                "text": text_data
             }
-        finally:
-            win32clipboard.CloseClipboard()
-    except Exception as e:
-        return {
-            "success": False,
-            "action": "set_clipboard",
-            "error": str(e)
-        }
+        except Exception as e:
+            last_error = str(e)
+            if opened:
+                try:
+                    win32clipboard.CloseClipboard()
+                except Exception:
+                    pass
+            time.sleep(retry_delay * (attempt + 1))
+
+    return {
+        "success": False,
+        "action": "get_clipboard",
+        "text": "",
+        "error": f"Failed to access clipboard after {max_retries} attempts: {last_error}"
+    }
 
 
-def clear_clipboard() -> dict:
-    """Clear all contents from Windows clipboard."""
-    try:
-        win32clipboard.OpenClipboard()
+def set_clipboard_text(text: str, max_retries: int = 5, retry_delay: float = 0.04) -> dict:
+    """
+    Set the Windows clipboard text content with bounded retries and write verification.
+    Ensures clipboard lock is acquired and validates content matches expected value.
+    """
+    target_str = str(text) if text is not None else ""
+    last_error = ""
+
+    for attempt in range(max_retries):
+        opened = False
         try:
+            win32clipboard.OpenClipboard()
+            opened = True
             win32clipboard.EmptyClipboard()
+            win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, target_str)
+            win32clipboard.CloseClipboard()
+            opened = False
+
+            # Bounded synchronization check: verify text was successfully committed
+            time.sleep(0.02)
+            check = get_clipboard_text(max_retries=3, retry_delay=0.03)
+            if check.get("success") and check.get("text") == target_str:
+                return {
+                    "success": True,
+                    "action": "set_clipboard",
+                    "text": target_str,
+                    "verified": True
+                }
+            elif attempt == max_retries - 1:
+                return {
+                    "success": False,
+                    "action": "set_clipboard",
+                    "text": target_str,
+                    "verified": False,
+                    "error": f"Clipboard content mismatch: expected '{target_str}', read '{check.get('text')}'"
+                }
+
+        except Exception as e:
+            last_error = str(e)
+            if opened:
+                try:
+                    win32clipboard.CloseClipboard()
+                except Exception:
+                    pass
+            time.sleep(retry_delay * (attempt + 1))
+
+    return {
+        "success": False,
+        "action": "set_clipboard",
+        "error": f"Failed to set clipboard after {max_retries} attempts: {last_error}"
+    }
+
+
+def clear_clipboard(max_retries: int = 5, retry_delay: float = 0.04) -> dict:
+    """Clear all contents from Windows clipboard with bounded retry handling."""
+    last_error = ""
+    for attempt in range(max_retries):
+        opened = False
+        try:
+            win32clipboard.OpenClipboard()
+            opened = True
+            win32clipboard.EmptyClipboard()
+            win32clipboard.CloseClipboard()
+            opened = False
             return {
                 "success": True,
                 "action": "clear_clipboard"
             }
-        finally:
-            win32clipboard.CloseClipboard()
-    except Exception as e:
-        return {
-            "success": False,
-            "action": "clear_clipboard",
-            "error": str(e)
-        }
+        except Exception as e:
+            last_error = str(e)
+            if opened:
+                try:
+                    win32clipboard.CloseClipboard()
+                except Exception:
+                    pass
+            time.sleep(retry_delay * (attempt + 1))
+
+    return {
+        "success": False,
+        "action": "clear_clipboard",
+        "error": f"Failed to clear clipboard after {max_retries} attempts: {last_error}"
+    }

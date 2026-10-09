@@ -206,14 +206,24 @@ def create_file(file_path: str, content: str = "") -> dict:
         }
 
 
-def create_folder(folder_path: str) -> dict:
-    """Create a new directory."""
+def create_folder(folder_path: str, allow_existing: bool = False) -> dict:
+    """Create a new directory with precondition validation."""
     try:
         p = Path(folder_path)
         if not p.is_absolute():
             p = PROJECT_ROOT / folder_path
 
-        p.mkdir(parents=True, exist_ok=True)
+        if p.exists() and not allow_existing:
+            return {
+                "success": False,
+                "action": "create_folder",
+                "path": str(p),
+                "name": p.name,
+                "already_exists": True,
+                "error": f"Folder '{p.name}' already exists at '{p}'."
+            }
+
+        p.mkdir(parents=True, exist_ok=allow_existing)
         return {
             "success": True,
             "action": "create_folder",
@@ -315,8 +325,11 @@ def delete_file(file_path: str) -> dict:
         }
 
 
-def rename_file(old_path: str, new_name_or_path: str) -> dict:
-    """Rename or move a file."""
+def rename_file(old_path: str, new_name_or_path: str, overwrite: bool = False) -> dict:
+    """
+    Rename or move a file or folder with precondition checks.
+    Detects destination conflicts without silent data destruction.
+    """
     try:
         src = Path(old_path)
         if not src.is_absolute():
@@ -326,7 +339,8 @@ def rename_file(old_path: str, new_name_or_path: str) -> dict:
             return {
                 "success": False,
                 "action": "rename_file",
-                "error": f"Source file '{old_path}' not found."
+                "source_missing": True,
+                "error": f"Source file or folder '{old_path}' not found."
             }
 
         dst = Path(new_name_or_path)
@@ -334,10 +348,19 @@ def rename_file(old_path: str, new_name_or_path: str) -> dict:
             dst = src.parent / new_name_or_path
 
         if dst.exists():
-            if dst.is_file():
-                dst.unlink()
-            elif dst.is_dir():
-                shutil.rmtree(dst)
+            if not overwrite:
+                target_kind = "folder" if dst.is_dir() else "file"
+                return {
+                    "success": False,
+                    "action": "rename_file",
+                    "destination_exists": True,
+                    "error": f"Cannot rename: destination {target_kind} '{dst.name}' already exists."
+                }
+            else:
+                if dst.is_file():
+                    dst.unlink()
+                elif dst.is_dir():
+                    shutil.rmtree(dst)
 
         if src.is_file():
             src.replace(dst)
@@ -350,6 +373,13 @@ def rename_file(old_path: str, new_name_or_path: str) -> dict:
             "old_path": str(src),
             "new_path": str(dst)
         }
+    except PermissionError as e:
+        return {
+            "success": False,
+            "action": "rename_file",
+            "locked": True,
+            "error": f"Cannot rename: path is locked or access denied ({e})"
+        }
     except Exception as e:
         return {
             "success": False,
@@ -358,12 +388,20 @@ def rename_file(old_path: str, new_name_or_path: str) -> dict:
         }
 
 
-def copy_file(src_path: str, dst_path: str) -> dict:
-    """Copy a file to a new destination."""
+def copy_file(src_path: str, dst_path: str, overwrite: bool = False) -> dict:
+    """Copy a file to a new destination with precondition validation."""
     try:
         src = Path(src_path)
         if not src.is_absolute():
             src = PROJECT_ROOT / src_path
+
+        if not src.exists():
+            return {
+                "success": False,
+                "action": "copy_file",
+                "source_missing": True,
+                "error": f"Source file '{src_path}' not found."
+            }
 
         dst = Path(dst_path)
         if not dst.is_absolute():
@@ -373,22 +411,22 @@ def copy_file(src_path: str, dst_path: str) -> dict:
             else:
                 dst = PROJECT_ROOT / dst_path
 
-        if not src.exists():
+        target_file = dst / src.name if dst.is_dir() else dst
+
+        if target_file.exists() and not overwrite:
             return {
                 "success": False,
                 "action": "copy_file",
-                "error": f"Source file '{src_path}' not found."
+                "destination_exists": True,
+                "error": f"Cannot copy: destination file '{target_file.name}' already exists."
             }
 
-        if dst.is_dir():
-            dst = dst / src.name
-
-        shutil.copy2(src, dst)
+        shutil.copy2(src, target_file)
         return {
             "success": True,
             "action": "copy_file",
             "src": str(src),
-            "dst": str(dst)
+            "dst": str(target_file)
         }
     except Exception as e:
         return {
